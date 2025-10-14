@@ -4,7 +4,7 @@ CFLAGS = -Wall -Wextra -Werror
 SRC_DIR = src
 OBJ_DIR = .obj
 INC_DIR = include
-SRCS_LIST = main md5_main md5_padding
+SRCS_LIST = main md5_main md5_preprocess
 
 SRCS = $(addprefix $(SRC_DIR)/, $(addsuffix .c, $(SRCS_LIST)))
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
@@ -13,7 +13,7 @@ INCS = -I$(INC_DIR)
 all: $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ -lm
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(OBJ_DIR)

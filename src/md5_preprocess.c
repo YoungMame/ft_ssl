@@ -16,7 +16,7 @@ int get_padding_len(size_t message_len)
 
 // Padding the message with a single 1 bit followed by 0 bits until the padded length is reached
 // and appending the original message length as a 64-bit big-endian integer
-char *get_padded_message(char *message, size_t *total_len)
+char *get_preprocessed_message(char *message, size_t *total_len)
 {
     int padding_len;
     size_t message_len;
