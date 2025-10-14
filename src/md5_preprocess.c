@@ -26,9 +26,10 @@ char *get_preprocessed_message(char *message, size_t *total_len)
     padding_len = get_padding_len(message_len);
     *total_len = message_len + 1 + (padding_len / 8) + 8;
 
-    printf("message_len = %" PRIu64 "\n", message_len);
-    printf("padding_len = %i\n", padding_len);
-    printf("total_len = %li\n", *total_len);
+    // DEBUG
+    // ft_printf("message_len = %" PRIu64 "\n", message_len);
+    // ft_printf("padding_len = %i\n", padding_len);
+    // ft_printf("total_len = %li\n", *total_len);
 
     padded_message = calloc(*total_len, sizeof(char));
     if (!padded_message)

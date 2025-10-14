@@ -5,25 +5,39 @@ SRC_DIR = src
 OBJ_DIR = .obj
 INC_DIR = include
 SRCS_LIST = main md5_main md5_preprocess
+LIBFT_DIR = libft
+LIBFT = libft/libft.a
 
 SRCS = $(addprefix $(SRC_DIR)/, $(addsuffix .c, $(SRCS_LIST)))
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-INCS = -I$(INC_DIR)
+INCS = -I$(INC_DIR) -I$(LIBFT_DIR)
 
 all: $(EXECUTABLE)
 
-$(EXECUTABLE): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ -lm
+$(EXECUTABLE): $(LIBFT) $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ -lm -L$(LIBFT_DIR) -lft
+	echo "Build complete: $(EXECUTABLE)"
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	echo "Compiling $<..."
 	@mkdir -p $(OBJ_DIR)
-	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
+	@$(CC) $(CFLAGS) $(INCS) -c $< -o $@ 
+
+$(LIBFT): $(LIBFT_DIR)
+	echo "Building libft..."
+	@$(MAKE) -C $(LIBFT_DIR)
+
+$(LIBFT_DIR):
+	echo "Cloning libft submodule..."
+	@git submodule update --init --recursive
 
 clean:
-	rm -f $(OBJ_DIR)/*.o
+	@$(MAKE) -C $(LIBFT_DIR) clean
+	@rm -rf $(OBJ_DIR)
 
 fclean: clean
-	rm -f $(EXECUTABLE)
+	@$(MAKE) -C $(LIBFT_DIR) fclean
+	@rm -f $(EXECUTABLE)
 
 re: fclean all
 
