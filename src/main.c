@@ -39,7 +39,7 @@ int main(int argc, char **argv)
         return (1);
     }
 
-    for (int i = 1; i < argc; i++)
+    for (int i = 2; i < argc; i++)
     {
         if (!ft_strncmp(argv[i], "-r", ft_strlen(argv[i])))
         {
@@ -88,25 +88,37 @@ int main(int argc, char **argv)
                 free(new_line);
                 new_line = ft_get_next_line(fd);
             }
-            message.content = content;
+            char *trimmed_content = ft_substr(content, 0, ft_strlen(content) - 1);
+            if (!trimmed_content)
+                return (1); // TODO exit and free
+            free(content);
+            message.content = trimmed_content;
             command->messages[command->messages_count] = message;
             command->messages_count++;
         }
     }
 
-    if (command->is_outputing_stdin) {
-    	char	*new_line;
-    	new_line = ft_get_next_line(STDIN_FILENO);
-        printf("after new line");
-    	while (new_line)
-    	{
-    		printf("first line%s", new_line);
-    		free(new_line);
-    		new_line = ft_get_next_line(STDIN_FILENO);
-    	}
-    	printf("\nwe printed all lines\n");
-    	free(new_line);
+    char	*new_line;
+    char    *content = ft_strdup("\0");
+    t_ssl_message   message;
+
+    message.type = SLL_INPUT_STDIN;
+    message.input = ft_strdup("stdin");
+    message.content = NULL;
+    new_line = ft_get_next_line(STDIN_FILENO);
+    while (new_line)
+    {
+        content = ft_strjoin(content, new_line);
+        free(new_line);
+        new_line = ft_get_next_line(STDIN_FILENO);
     }
+    char *trimmed_content = ft_substr(content, 0, ft_strlen(content) - 1);
+    if (!trimmed_content)
+        return (1); // TODO exit and free
+    free(content);
+    message.content = trimmed_content;
+    command->messages[command->messages_count] = message;
+    command->messages_count++;
 
     // Hashing
     for (size_t i = 0; i < command->messages_count; i++)
@@ -114,24 +126,32 @@ int main(int argc, char **argv)
         int success = fptr(argc, argv, command);    
         if (!success)
             return (0); // TODO exit and free
-        ft_printf("%s\n", command->messages[i].output);
     }
 
     // Output
     for (size_t i = 0; i < command->messages_count; i++)
     {
-        if (command->is_outputing_stdin)
-        {
-            if (command->messages[i].type == SLL_INPUT_STDIN)
-                ft_printf("%s\n", command->messages[i].content);
-        }
         if (!command->is_quiet)
         {
             if (command->is_format_reversed)
-                ft_printf("%s %s\n", command->messages[i].output, command->messages[i].input);
+            {
+                if (command->messages[i].type == SLL_INPUT_STRING)
+                    ft_printf("%s \"%s\"\n", command->messages[i].output, command->messages[i].input);
+                else if (command->messages[i].type == SLL_INPUT_STDIN && command->is_outputing_stdin)
+                    ft_printf("(\"%s\")= %s\n", command->messages[i].content, command->messages[i].output);
+                else if (command->messages[i].type == SLL_INPUT_STDIN)
+                    ft_printf("%s\n", command->messages[i].output);
+                else
+                    ft_printf("%s %s\n", command->messages[i].output, command->messages[i].input);
+            }
             else
             {
-                ft_printf("(%s) = %s\n", command->messages[i].input, command->messages[i].output);
+                if (command->messages[i].type == SLL_INPUT_STRING)
+                    ft_printf("(\"%s\") = %s\n", command->messages[i].input, command->messages[i].output);
+                else if (command->messages[i].type == SLL_INPUT_STDIN && command->is_outputing_stdin)
+                    ft_printf("(\"%s\")= %s\n", command->messages[i].content, command->messages[i].output);
+                else
+                    ft_printf("%s (%s) = %s\n", command->name, command->messages[i].input, command->messages[i].output);
             }
         }
         else
