@@ -46,9 +46,38 @@ typedef struct  s_ssl_command {
     6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21 \
 }
 
-// md5_padding.c
-char *get_preprocessed_message(char *message, size_t *total_len);
+// SHA256 CONSTANTS
 
-// md5_main.c
+# define MD5_CHUNK_SIZE 512
+# define SHA256_INITIAL_A 0x6a09e667
+# define SHA256_INITIAL_B 0xbb67ae85
+# define SHA256_INITIAL_C 0x3c6ef372
+# define SHA256_INITIAL_D 0xa54ff53a
+# define SHA256_INITIAL_E 0x510e527f
+# define SHA256_INITIAL_F 0x9b05688c
+# define SHA256_INITIAL_G 0x1f83d9ab
+# define SHA256_INITIAL_H 0x5be0cd19
+
+// preprocess.c
+char *get_preprocessed_message(char *message, size_t *total_len, bool is_size_big_endian);
+
+// md5.c
 int md5(int argc, char **argv, t_ssl_command *command);
+
+// sha256.c
+int sha256(int argc, char **argv, t_ssl_command *command);
+
+// common.c
+
+uint64_t get_message_len(const char *payload, size_t total_len);
+
+uint32_t **allocate_chunk(size_t chunk_count);
+
+uint32_t    left_rotate(uint32_t value, int shift);
+
+uint32_t    right_rotate(uint32_t value, int shift);
+
+// primes.c
+int *generate_primes(int len);
+
 

@@ -3,7 +3,7 @@
 // Use the sine of each integer in radian as random values
 // for each k[i]:
 // K[i] := floor(232 × abs(sin(i + 1)))
-uint32_t* init_K() {
+uint32_t* md5_init_K() {
     uint32_t *K = malloc(64 * sizeof(uint32_t));
     if (!K) return NULL;
     for (int i = 0; i < 64; i++)
@@ -11,42 +11,6 @@ uint32_t* init_K() {
         K[i] = (uint32_t)(fabs(sin(i + 1)) * pow(2, 32));
     }
     return K;
-}
-
-// Retrieve original message length from the last 8 bytes of the padded message
-uint64_t get_message_len(const char *payload, size_t total_len)
-{
-    uint64_t bit_len = 0;
-    for (int i = 0; i < 8; i++)
-    {
-        bit_len = (bit_len | ((uint64_t)(unsigned char)payload[total_len - 8 + i]) << (8 * i));
-    }
-    return bit_len;
-}
-
-// Allocate the good number of chunks and the words in it
-uint32_t **allocate_chunk(size_t chunk_count)
-{
-    uint32_t **M = malloc(chunk_count * sizeof(uint32_t*));
-    if (!M) return NULL;
-
-    for (size_t i = 0; i < chunk_count; i++)
-    {
-        M[i] = malloc(16 * sizeof(uint32_t));
-        if (!M[i])
-        {
-            for (size_t j = 0; j < i; j++)
-                free(M[j]);
-            free(M);
-            return NULL;
-        }
-    }
-    return (M);
-}
-
-uint32_t    left_rotate(uint32_t value, int shift)
-{
-    return (value << shift) | (value >> (32 - shift));
 }
 
 // Main MD5 function
@@ -59,11 +23,11 @@ char *md5_hashing(char *message) {
     uint32_t *K;
     size_t total_len;
 
-    K = init_K();
+    K = md5_init_K();
         if (!K) return NULL;
 
     // Preprocess the message in a char array where each byte is an element of the array
-    preproc_message = get_preprocessed_message(message, &total_len);
+    preproc_message = get_preprocessed_message(message, &total_len, false);
 
     // Break the message into 512-bit chunks (each chunk is 64 bytes)
     size_t chunks_count = total_len / 64;

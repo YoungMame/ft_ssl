@@ -7,7 +7,7 @@ int main(int argc, char **argv)
 
     // Input
     if (argc < 2) {
-        printf("Usage: ft_ssl <command> [options]\n");
+        ft_printf("Usage: ft_ssl <command> [options]\n");
         return (1);
     }
     
@@ -27,15 +27,20 @@ int main(int argc, char **argv)
         fptr = &md5;
         command->name = ft_strdup("MD5");
     }
+    else if (!strcmp(argv[1], "sha256"))
+    {
+        fptr = &sha256;
+        command->name = ft_strdup("SHA256");
+    }
     else
     {
-        printf("ft_ssl: Error: %s is an invalid command.\n", argv[1]);
-        printf("Available commands:\n");
-        printf("md5\n");
-        printf("sha256\n");
-        printf("\n");
-        printf("flags:\n");
-        printf("-p -q -r -s\n");
+        ft_printf("ft_ssl: Error: %s is an invalid command.\n", argv[1]);
+        ft_printf("Available commands:\n");
+        ft_printf("md5\n");
+        ft_printf("sha256\n");
+        ft_printf("\n");
+        ft_printf("flags:\n");
+        ft_printf("-p -q -r -s\n");
         return (1);
     }
 
@@ -84,41 +89,49 @@ int main(int argc, char **argv)
             while (new_line)
             {
                 content = ft_strjoin(content, new_line);
-                printf("first line%s", new_line);
                 free(new_line);
                 new_line = ft_get_next_line(fd);
             }
-            char *trimmed_content = ft_substr(content, 0, ft_strlen(content) - 1);
-            if (!trimmed_content)
-                return (1); // TODO exit and free
-            free(content);
-            message.content = trimmed_content;
+            message.content = content;
             command->messages[command->messages_count] = message;
             command->messages_count++;
         }
     }
 
-    char	*new_line;
-    char    *content = ft_strdup("\0");
-    t_ssl_message   message;
-
-    message.type = SLL_INPUT_STDIN;
-    message.input = ft_strdup("stdin");
-    message.content = NULL;
-    new_line = ft_get_next_line(STDIN_FILENO);
-    while (new_line)
+    // Read from stdin if no messages were added from arguments, or if -p flag is used
+    if (command->messages_count == 0 || command->is_outputing_stdin)
     {
-        content = ft_strjoin(content, new_line);
-        free(new_line);
+        char    *new_line;
+        char    *content = ft_strdup("");
+        t_ssl_message   message;
+
+        message.type = SLL_INPUT_STDIN;
+        message.input = ft_strdup("(stdin)");
+        message.content = NULL;
+        
         new_line = ft_get_next_line(STDIN_FILENO);
+        while (new_line)
+        {
+            if (command->is_outputing_stdin)
+                ft_printf("%s", new_line); // Echo stdin when -p flag is used
+
+            char *temp = ft_strjoin(content, new_line);
+            free(content);
+            content = temp;
+            free(new_line);
+            new_line = ft_get_next_line(STDIN_FILENO);
+        }
+        
+        // Remove trailing newline if present
+        size_t len = ft_strlen(content);
+        if (len > 0 && content[len - 1] == '\n') {
+            content[len - 1] = '\0';
+        }
+        
+        message.content = content;
+        command->messages[command->messages_count] = message;
+        command->messages_count++;
     }
-    char *trimmed_content = ft_substr(content, 0, ft_strlen(content) - 1);
-    if (!trimmed_content)
-        return (1); // TODO exit and free
-    free(content);
-    message.content = trimmed_content;
-    command->messages[command->messages_count] = message;
-    command->messages_count++;
 
     // Hashing
     for (size_t i = 0; i < command->messages_count; i++)
