@@ -60,7 +60,7 @@ int main(int argc, char **argv)
         }
         else if (!ft_strncmp(argv[i], "-s", ft_strlen(argv[i])))
         {
-            if (argc < i || !ft_strlen(argv[i + 1]))
+            if (argc < i)
                 return (1); // TODO non existing file
 
             t_ssl_message   message;

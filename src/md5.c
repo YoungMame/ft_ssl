@@ -5,7 +5,8 @@
 // K[i] := floor(232 × abs(sin(i + 1)))
 uint32_t* md5_init_K() {
     uint32_t *K = malloc(64 * sizeof(uint32_t));
-    if (!K) return NULL;
+    if (!K)
+        return NULL;
     for (int i = 0; i < 64; i++)
     {
         K[i] = (uint32_t)(fabs(sin(i + 1)) * pow(2, 32));

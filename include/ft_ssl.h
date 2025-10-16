@@ -35,10 +35,10 @@ typedef struct  s_ssl_command {
 
 // MD5 CONSTANTS
 # define MD5_CHUNK_SIZE 512
-# define MD5_INITIAL_A 0x67452301
-# define MD5_INITIAL_B 0xefcdab89
-# define MD5_INITIAL_C 0x98badcfe
-# define MD5_INITIAL_D 0x10325476
+# define MD5_INITIAL_A 0x67425301
+# define MD5_INITIAL_B 0xEDFCBA45
+# define MD5_INITIAL_C 0x98CBADFE
+# define MD5_INITIAL_D 0x13DCE476
 # define MD5_SHIFT_PER_ROUND { \
     7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, \
     5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20, \
