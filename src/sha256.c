@@ -16,32 +16,32 @@
 
 // We first implement sha256 used functions
 
-uint32_t    sigma0(uint32_t a)
+static uint32_t    sigma0(uint32_t a)
 {
     return (right_rotate(a, 2) ^ right_rotate(a, 13) ^ right_rotate(a, 22));
 }
 
-uint32_t    sigma1(uint32_t e)
+static uint32_t    sigma1(uint32_t e)
 {
     return (right_rotate(e, 6) ^ right_rotate(e, 11) ^ right_rotate(e, 25));
 }
 
-uint32_t    small_sigma0(uint32_t x)
+static uint32_t    small_sigma0(uint32_t x)
 {
     return (right_rotate(x, 7) ^ right_rotate(x, 18) ^ (x >> 3));
 }
 
-uint32_t    small_sigma1(uint32_t x)
+static uint32_t    small_sigma1(uint32_t x)
 {
     return (right_rotate(x, 17) ^ right_rotate(x, 19) ^ (x >> 10));
 }
 
-uint32_t    sha256_choice(uint32_t e, uint32_t f, uint32_t g)
+static uint32_t    sha256_choice(uint32_t e, uint32_t f, uint32_t g)
 {
     return ((e & f) ^ ((~e) & g));
 }
 
-uint32_t    sha256_majority(uint32_t a, uint32_t b, uint32_t c)
+static uint32_t    sha256_majority(uint32_t a, uint32_t b, uint32_t c)
 {
     return ((a & b) ^ (a & c) ^ (b & c));
 }
@@ -49,7 +49,7 @@ uint32_t    sha256_majority(uint32_t a, uint32_t b, uint32_t c)
 // Initialize array of K constants:
 // first 32 bits of the fractional parts 
 // of the cube roots of the first 64 primes
-uint32_t* sha256_init_K() {
+static uint32_t* sha256_init_K() {
     int *primes = generate_primes(64);
 
     uint32_t *K = malloc(64 * sizeof(uint32_t));
@@ -69,9 +69,9 @@ uint32_t* sha256_init_K() {
     return K;
 }
 
-char    *append_h(char *hash, uint32_t value)
+static char    *append_h(char *hash, uint32_t value)
 {
-    char    *hex = ft_itoa_base_unsigned32(value, "0123456789abcdef");
+    char    *hex = ft_itoa_base_unsigned32(value, "0123456789abcdef", 8);
     if (!hex)
         return (NULL);
     char    *str = ft_strjoin(hash, hex);
@@ -79,7 +79,7 @@ char    *append_h(char *hash, uint32_t value)
     return str;
 }
 
-char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t h3, uint32_t h4, uint32_t h5, uint32_t h6, uint32_t h7)
+static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t h3, uint32_t h4, uint32_t h5, uint32_t h6, uint32_t h7)
 {
     char *digest = malloc(257 * sizeof(char));
     if (!digest)
@@ -103,7 +103,7 @@ char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t h3, ui
 // Using the preprocessed message, process it in 512-bit chunks
 // Break message into 512-bit chunks
 // Break each chunk into sixteen 32-bit words
-char *sha256_hashing(char *message) {
+static char *sha256_hashing(char *message) {
     (void)message;
     char *preproc_message;
     size_t total_len;

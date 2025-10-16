@@ -1,9 +1,46 @@
 #include "ft_ssl.h"
 
+static char    *append_h(char *hash, uint32_t value)
+{
+    // Bit swap to little-endian
+    uint32_t o1, o2, o3, o4;
+    o1 = (0xFF000000 & (value << 24));
+    o2 = (0x00FF0000 & (value << 8));
+    o3 = (0x0000FF00 & (value >> 8));
+    o4 = (0x000000FF & (value >> 24));
+    uint32_t little_endian_value = o1 | o2 | o3 | o4;
+    char    *hex = ft_itoa_base_unsigned32(little_endian_value, "0123456789abcdef", 8);
+    if (!hex)
+        return (NULL);
+    char    *str = ft_strjoin(hash, hex);
+    free(hex);
+    return str;
+}
+
+static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t h3)
+{
+    char *digest = malloc(257 * sizeof(char));
+    if (!digest)
+        return NULL;
+    digest[0] = '\0';
+
+    uint32_t values[4] = {h0, h1, h2, h3};
+    for (int i = 0; i < 4; i++)
+    {
+        char *tmp = append_h(digest, values[i]);
+        free(digest);
+        digest = tmp;
+        if (!digest)
+            return NULL;
+    }
+
+    return digest;
+}
+
 // Use the sine of each integer in radian as random values
 // for each k[i]:
 // K[i] := floor(232 × abs(sin(i + 1)))
-uint32_t* md5_init_K() {
+static uint32_t* md5_init_K() {
     uint32_t *K = malloc(64 * sizeof(uint32_t));
     if (!K)
         return NULL;
@@ -19,7 +56,7 @@ uint32_t* md5_init_K() {
 // Break message into 512-bit chunks
 // Break each chunk into sixteen 32-bit words
 // Use four words (A, B, C, D) to compute the message digest and set to initial constant values
-char *md5_hashing(char *message) {
+static char *md5_hashing(char *message) {
     char *preproc_message;
     uint32_t *K;
     size_t total_len;
@@ -51,10 +88,10 @@ char *md5_hashing(char *message) {
             size_t current_byte = word + byte;
 
             // Store bytes in the word
-            M[i][j] = ((uint32_t)preproc_message[current_byte])
-                | ((uint32_t)preproc_message[current_byte + 1] << 8)
-                | ((uint32_t)preproc_message[current_byte + 2] << 16)
-                | ((uint32_t)preproc_message[current_byte + 3] << 24);
+            M[i][j] = ((uint32_t)(unsigned char)preproc_message[current_byte])
+                | ((uint32_t)(unsigned char)preproc_message[current_byte + 1] << 8)
+                | ((uint32_t)(unsigned char)preproc_message[current_byte + 2] << 16)
+                | ((uint32_t)(unsigned char)preproc_message[current_byte + 3] << 24);
         }
 
         // DEBUG
@@ -112,7 +149,7 @@ char *md5_hashing(char *message) {
             }
             else if (i < 32) // Round 2
             {
-                F = (d & b) | ((~d) & c);
+                F = (b & d) | (c & ~d);
                 g = (5 * i + 1) % 16;
             }
             else if (i < 48) // Round 3
@@ -140,7 +177,8 @@ char *md5_hashing(char *message) {
     }
 
     // Output the hash in hexadecimal format
-    char *digest = malloc((32 + 1) * sizeof(char));
+    char *digest = final_hash_value(h0, h1, h2, h3);
+
     if (!digest)
     {
         for (size_t i = 0; i < chunks_count; i++)
@@ -149,11 +187,10 @@ char *md5_hashing(char *message) {
         free(K);
         return(NULL);
     }
-
-    sprintf(digest, "%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x", 0xff & (h0 >> 0), 0xff & (h0 >> 8), 0xff & (h0 >> 16), 0xff & (h0 >> 24),
-            0xff & (h1 >> 0), 0xff & (h1 >> 8), 0xff & (h1 >> 16), 0xff & (h1 >> 24),
-            0xff & (h2 >> 0), 0xff & (h2 >> 8), 0xff & (h2 >> 16), 0xff & (h2 >> 24),
-            0xff & (h3 >> 0), 0xff & (h3 >> 8), 0xff & (h3 >> 16), 0xff & (h3 >> 24));
+    // printf("digest by printf: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", 0xff & (h0 >> 0), 0xff & (h0 >> 8), 0xff & (h0 >> 16), 0xff & (h0 >> 24),
+    //         0xff & (h1 >> 0), 0xff & (h1 >> 8), 0xff & (h1 >> 16), 0xff & (h1 >> 24),
+    //         0xff & (h2 >> 0), 0xff & (h2 >> 8), 0xff & (h2 >> 16), 0xff & (h2 >> 24),
+    //         0xff & (h3 >> 0), 0xff & (h3 >> 8), 0xff & (h3 >> 16), 0xff & (h3 >> 24));
 
     for (size_t i = 0; i < chunks_count; i++)
         free(M[i]);

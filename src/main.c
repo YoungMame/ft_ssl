@@ -122,12 +122,6 @@ int main(int argc, char **argv)
             new_line = ft_get_next_line(STDIN_FILENO);
         }
         
-        // Remove trailing newline if present
-        size_t len = ft_strlen(content);
-        if (len > 0 && content[len - 1] == '\n') {
-            content[len - 1] = '\0';
-        }
-        
         message.content = content;
         command->messages[command->messages_count] = message;
         command->messages_count++;
@@ -160,11 +154,11 @@ int main(int argc, char **argv)
             else
             {
                 if (command->messages[i].type == SLL_INPUT_STRING)
-                    ft_printf("(\"%s\") = %s\n", command->messages[i].input, command->messages[i].output);
+                    ft_printf("(\"%s\")= %s\n", command->messages[i].input, command->messages[i].output);
                 else if (command->messages[i].type == SLL_INPUT_STDIN && command->is_outputing_stdin)
                     ft_printf("(\"%s\")= %s\n", command->messages[i].content, command->messages[i].output);
                 else
-                    ft_printf("%s (%s) = %s\n", command->name, command->messages[i].input, command->messages[i].output);
+                    ft_printf("%s(%s)= %s\n", command->name, command->messages[i].input, command->messages[i].output);
             }
         }
         else
