@@ -1,5 +1,68 @@
 #include "ft_ssl.h"
 
+void    free_command(t_ssl_command *command)
+{
+    if (command->name)
+    {
+        free(command->name);
+        command->name = NULL;
+    }
+    for(size_t i = command->messages_count; i < command->messages_count; i++)
+    {
+        if (command->messages[i].input)
+        {
+            free(command->messages[i].input);
+            command->messages[i].input = NULL;
+        }
+        if (command->messages[i].content)
+        {
+            free(command->messages[i].content);
+            command->messages[i].content = NULL;
+        }
+        if (command->messages[i].output)
+        {
+            free(command->messages[i].output);
+            command->messages[i].output = NULL;
+        }
+    }
+}
+
+// static void    free_message_content(t_ssl_message message)
+// {
+//     if (message.input)
+//     {
+//         free(message.input);
+//         message.input = NULL;
+//     }
+//     if (message.content)
+//     {
+//         free(message.content);
+//         message.content = NULL;
+//     }
+//     if (message.output)
+//     {
+//         free(message.output);
+//         message.output = NULL;
+//     }
+// }
+
+t_ssl_command   *init_command()
+{
+    t_ssl_command   *command;
+    command = malloc(sizeof(t_ssl_command));
+    if (!command)
+        return (NULL);
+        
+    ft_memset(command, 0, sizeof(t_ssl_command));
+    command->messages_count = 0;
+    command->is_format_reversed = false;
+    command->is_outputing_stdin = false;
+    command->is_quiet = false;
+    command->messages_count = 0;
+    command->name = NULL;
+    return (command);
+}
+
 int main(int argc, char **argv)
 {
     t_ssl_command   *command;
@@ -11,23 +74,16 @@ int main(int argc, char **argv)
         return (1);
     }
     
-    command = malloc(sizeof(t_ssl_command));
-    if (!command)
-        return (1); // TODO free all and exit
-        
-    // Initialize command structure
-    memset(command, 0, sizeof(t_ssl_command));
-    command->messages_count = 0;
-    command->is_format_reversed = false;
-    command->is_outputing_stdin = false;
-    command->is_quiet = false;
-    
-    if (!strcmp(argv[1], "md5"))
+    command = init_command();
+    if (command == NULL)
+        return (free_command(command), 1);
+
+    if (!ft_strncmp(argv[1], "md5", ft_strlen(argv[1])))
     {
         fptr = &md5;
         command->name = ft_strdup("MD5");
     }
-    else if (!strcmp(argv[1], "sha256"))
+    else if (!ft_strncmp(argv[1], "sha256", ft_strlen(argv[1])))
     {
         fptr = &sha256;
         command->name = ft_strdup("SHA256");
@@ -61,7 +117,7 @@ int main(int argc, char **argv)
         else if (!ft_strncmp(argv[i], "-s", ft_strlen(argv[i])))
         {
             if (argc < i)
-                return (1); // TODO non existing file
+                return (free_command(command), 1);
 
             t_ssl_message   message;
             char            *input = ft_strdup(argv[i + 1]);
@@ -84,7 +140,7 @@ int main(int argc, char **argv)
             char    *content = ft_strdup("\0");
             int fd = open(input, O_RDONLY);
             if (fd < 0)
-                return (1); // TODO exit and free missing file
+                return (free_command(command), 1);
             new_line = ft_get_next_line(fd);
             while (new_line)
             {
@@ -103,8 +159,10 @@ int main(int argc, char **argv)
     {
         char    *new_line;
         char    *content = ft_strdup("");
-        t_ssl_message   message;
+        if (content == NULL)
+            return (free_command(command), 1);
 
+        t_ssl_message   message;
         message.type = SLL_INPUT_STDIN;
         message.input = ft_strdup("(stdin)");
         message.content = NULL;
@@ -132,7 +190,7 @@ int main(int argc, char **argv)
     {
         int success = fptr(argc, argv, command);    
         if (!success)
-            return (0); // TODO exit and free
+            return (free_command(command), 1);
     }
 
     // Output
@@ -168,6 +226,6 @@ int main(int argc, char **argv)
 
     }
     
-    return (0);
+    return (free_command(command), 0);
 }
 

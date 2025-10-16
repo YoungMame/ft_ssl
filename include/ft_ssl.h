@@ -25,7 +25,6 @@ typedef struct  s_ssl_message {
 
 typedef struct  s_ssl_command {
     char            *name;
-    char            *result;
     bool            is_quiet;
     bool            is_format_reversed;
     bool            is_outputing_stdin;
@@ -73,11 +72,16 @@ uint64_t get_message_len(const char *payload, size_t total_len);
 
 uint32_t **allocate_chunk(size_t chunk_count);
 
+void    free_chunk(uint32_t **M, size_t chunk_count);
+
 uint32_t    left_rotate(uint32_t value, int shift);
 
 uint32_t    right_rotate(uint32_t value, int shift);
 
 // primes.c
 int *generate_primes(int len);
+
+// free
+void    free_command(t_ssl_command *command);
 
 

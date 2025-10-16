@@ -52,9 +52,9 @@ static uint32_t    sha256_majority(uint32_t a, uint32_t b, uint32_t c)
 static uint32_t* sha256_init_K() {
     int *primes = generate_primes(64);
 
-    uint32_t *K = malloc(64 * sizeof(uint32_t));
+    uint32_t *K = ft_calloc(64, sizeof(uint32_t));
     if (!K)
-        return NULL;
+        return (free(primes), NULL);
     for (int i = 0; i < 64; i++)
     {
         double prime = (double)primes[i];
@@ -81,7 +81,7 @@ static char    *append_h(char *hash, uint32_t value)
 
 static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t h3, uint32_t h4, uint32_t h5, uint32_t h6, uint32_t h7)
 {
-    char *digest = malloc(257 * sizeof(char));
+    char *digest = ft_calloc(257, sizeof(char));
     if (!digest)
         return NULL;
     digest[0] = '\0';
@@ -91,9 +91,13 @@ static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t
     {
         char *tmp = append_h(digest, values[i]);
         free(digest);
+        if (!tmp)
+        {
+            free(digest);
+            digest = NULL;
+            return (NULL);
+        }
         digest = tmp;
-        if (!digest)
-            return NULL;
     }
 
     return digest;
@@ -104,13 +108,13 @@ static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t
 // Break message into 512-bit chunks
 // Break each chunk into sixteen 32-bit words
 static char *sha256_hashing(char *message) {
-    (void)message;
     char *preproc_message;
     size_t total_len;
     uint32_t *K;
 
     K = sha256_init_K();
-        if (!K) return NULL;
+    if (!K)
+    return (NULL);
 
     // Preprocess the message in a char array where each byte is an element of the array
     preproc_message = get_preprocessed_message(message, &total_len, true);
@@ -120,9 +124,7 @@ static char *sha256_hashing(char *message) {
 
     uint32_t **M = allocate_chunk(chunks_count);
     if (!M)
-    {
-        return NULL;
-    }
+        return (free(K), free(preproc_message), NULL);
 
     uint32_t a;
     uint32_t b;
@@ -235,17 +237,10 @@ static char *sha256_hashing(char *message) {
     // Output the hash in hexadecimal format
     char *digest = final_hash_value(h0, h1, h2, h3, h4, h5, h6, h7);
     if (!digest)
-    {
-        for (size_t i = 0; i < chunks_count; i++)
-            free(M[i]);
-        free(M);
-        free(K);
-        return(NULL);
-    }
+        return (free(preproc_message), free(K), free_chunk(M, chunks_count), NULL);
 
-    for (size_t i = 0; i < chunks_count; i++)
-        free(M[i]);
-    free(M);
+    free_chunk(M, chunks_count);
+    free(preproc_message);
     free(K);
     return (digest);
 }
@@ -256,7 +251,10 @@ int sha256(int argc, char **argv, t_ssl_command *command) {
     printf("SHA256 function\n");
     for (size_t i = 0; i < command->messages_count; i++)
     {
-        command->messages[i].output = sha256_hashing(command->messages[i].content);
+        char    *output = sha256_hashing(command->messages[i].content);
+        if (!output)
+            return (0);
+        command->messages[i].output = output;
     }
     
     return (1);

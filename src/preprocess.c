@@ -31,11 +31,11 @@ char *get_preprocessed_message(char *message, size_t *total_len, bool is_size_bi
     // ft_printf("padding_len = %i\n", padding_len);
     // ft_printf("total_len = %li\n", *total_len);
 
-    padded_message = calloc(*total_len, sizeof(char));
+    padded_message = ft_calloc(*total_len, sizeof(char));
     if (!padded_message)
         return (NULL);
 
-    memcpy(padded_message, message, message_len);
+    ft_memcpy(padded_message, message, message_len);
     padded_message[message_len] = 0x80; // bit de padding '1'
 
     uint64_t bit_len = (uint64_t)message_len * 8;

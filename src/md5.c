@@ -72,10 +72,7 @@ static char *md5_hashing(char *message) {
 
     uint32_t **M = allocate_chunk(chunks_count);
     if (!M)
-    {
-        free(K);
-        return NULL;
-    }
+        return (free(K), free(preproc_message), NULL);
 
     // Break each chunk into 16 32 bits words
     for (size_t i = 0; i < chunks_count; i++)
@@ -180,24 +177,16 @@ static char *md5_hashing(char *message) {
     char *digest = final_hash_value(h0, h1, h2, h3);
 
     if (!digest)
-    {
-        for (size_t i = 0; i < chunks_count; i++)
-            free(M[i]);
-        free(M);
-        free(K);
-        return(NULL);
-    }
+        return (free(preproc_message), free(K), free_chunk(M, chunks_count), NULL);
     // printf("digest by printf: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", 0xff & (h0 >> 0), 0xff & (h0 >> 8), 0xff & (h0 >> 16), 0xff & (h0 >> 24),
     //         0xff & (h1 >> 0), 0xff & (h1 >> 8), 0xff & (h1 >> 16), 0xff & (h1 >> 24),
     //         0xff & (h2 >> 0), 0xff & (h2 >> 8), 0xff & (h2 >> 16), 0xff & (h2 >> 24),
     //         0xff & (h3 >> 0), 0xff & (h3 >> 8), 0xff & (h3 >> 16), 0xff & (h3 >> 24));
 
-    for (size_t i = 0; i < chunks_count; i++)
-        free(M[i]);
-    free(M);
+    free_chunk(M, chunks_count);
+    free(preproc_message);
     free(K);
-    
-    return (digest);
+    return (free_chunk(M, chunks_count), free(K), free(preproc_message), digest);
 }
 
 int md5(int argc, char **argv, t_ssl_command *command) {
@@ -205,7 +194,10 @@ int md5(int argc, char **argv, t_ssl_command *command) {
     (void)argv;
     for (size_t i = 0; i < command->messages_count; i++)
     {
-        command->messages[i].output = md5_hashing(command->messages[i].content);
+        char    *output = md5_hashing(command->messages[i].content);
+        if (!output)
+            return (0);
+        command->messages[i].output = output;
     }
     
     return (1);

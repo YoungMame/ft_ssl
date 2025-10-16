@@ -1,5 +1,3 @@
 manage free on exit
-implement sprintf
 implement math lib functions
-if not -p flag and already a content don't read stdin
 check binary operations

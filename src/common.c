@@ -11,21 +11,31 @@ uint64_t get_message_len(const char *payload, size_t total_len)
     return bit_len;
 }
 
+void    free_chunk(uint32_t **M, size_t chunk_count)
+{
+    for (size_t i = 0; i < chunk_count; i++)
+    {
+        free(M[i]);
+    }
+    free(M);
+}
+
 // Allocate the good number of chunks and the words in it
 uint32_t **allocate_chunk(size_t chunk_count)
 {
-    uint32_t **M = malloc(chunk_count * sizeof(uint32_t*));
-    if (!M) return NULL;
+    uint32_t **M = ft_calloc(chunk_count, sizeof(uint32_t*));
+    if (!M)
+        return (NULL);
 
     for (size_t i = 0; i < chunk_count; i++)
     {
-        M[i] = malloc(16 * sizeof(uint32_t));
+        M[i] = ft_calloc(16, sizeof(uint32_t));
         if (!M[i])
         {
             for (size_t j = 0; j < i; j++)
                 free(M[j]);
             free(M);
-            return NULL;
+            return (NULL);
         }
     }
     return (M);

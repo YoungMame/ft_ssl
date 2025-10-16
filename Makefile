@@ -4,8 +4,8 @@ CFLAGS = -Wall -Wextra -Werror
 SRC_DIR = src
 OBJ_DIR = .obj
 INC_DIR = include
-SRCS_LIST = main md5 sha256 preprocess common primes
-LIBFT_DIR = libft
+SRCS_LSRCS_LIST = main md5 sha256 preprocess common primes
+IR = libft
 LIBFT = libft/libft.a
 
 SRCS = $(addprefix $(SRC_DIR)/, $(addsuffix .c, $(SRCS_LIST)))
@@ -42,3 +42,4 @@ fclean: clean
 re: fclean all
 
 .PHONY: all clean fclean re
+
