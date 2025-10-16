@@ -90,13 +90,14 @@ static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t
     for (int i = 0; i < 8; i++)
     {
         char *tmp = append_h(digest, values[i]);
-        free(digest);
         if (!tmp)
         {
             free(digest);
+            free(tmp);
             digest = NULL;
             return (NULL);
         }
+        free(digest);
         digest = tmp;
     }
 
@@ -154,10 +155,10 @@ static char *sha256_hashing(char *message) {
             size_t current_byte = word + byte;
 
             // Store bytes in the word big endian
-            M[i][j] = ((uint32_t)(unsigned char)preproc_message[current_byte] << 24)
-                | ((uint32_t)(unsigned char)preproc_message[current_byte + 1] << 16)
-                | ((uint32_t)(unsigned char)preproc_message[current_byte + 2] << 8)
-                | ((uint32_t)(unsigned char)preproc_message[current_byte + 3]);
+            M[i][j] = ((uint32_t)preproc_message[current_byte] << 24)
+                | ((uint32_t)preproc_message[current_byte + 1] << 16)
+                | ((uint32_t)preproc_message[current_byte + 2] << 8)
+                | ((uint32_t)preproc_message[current_byte + 3]);
         }
 
         // DEBUG
@@ -248,7 +249,6 @@ static char *sha256_hashing(char *message) {
 int sha256(int argc, char **argv, t_ssl_command *command) {
     (void)argc;
     (void)argv;
-    printf("SHA256 function\n");
     for (size_t i = 0; i < command->messages_count; i++)
     {
         char    *output = sha256_hashing(command->messages[i].content);

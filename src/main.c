@@ -7,7 +7,7 @@ void    free_command(t_ssl_command *command)
         free(command->name);
         command->name = NULL;
     }
-    for(size_t i = command->messages_count; i < command->messages_count; i++)
+    for(size_t i = 0; i < command->messages_count; i++)
     {
         if (command->messages[i].input)
         {
@@ -25,6 +25,7 @@ void    free_command(t_ssl_command *command)
             command->messages[i].output = NULL;
         }
     }
+    free(command);
 }
 
 // static void    free_message_content(t_ssl_message message)
@@ -49,7 +50,7 @@ void    free_command(t_ssl_command *command)
 t_ssl_command   *init_command()
 {
     t_ssl_command   *command;
-    command = malloc(sizeof(t_ssl_command));
+    command = ft_calloc(1, sizeof(t_ssl_command));
     if (!command)
         return (NULL);
         
@@ -124,6 +125,7 @@ int main(int argc, char **argv)
             message.type = SLL_INPUT_STRING;
             message.input = input;
             message.content = ft_strdup(input);
+            message.output = NULL;
             command->messages[command->messages_count] = message;
             command->messages_count++;
             i++;
@@ -135,17 +137,22 @@ int main(int argc, char **argv)
             char    *input = ft_strdup(argv[i]);
             message.type = SLL_INPUT_FILE;
             message.input = input;
-            message.content = NULL;
+            message.output = NULL;
             char	*new_line;
             char    *content = ft_strdup("\0");
             int fd = open(input, O_RDONLY);
             if (fd < 0)
-                return (free_command(command), 1);
+            {
+                ft_printf("ft_ssl: %s: No such file or directory\n", input);
+                return (free_command(command), free(input), free(content), 1);
+            }
             new_line = ft_get_next_line(fd);
             while (new_line)
             {
-                content = ft_strjoin(content, new_line);
+                char    *temp = ft_strjoin(content, new_line);
+                free(content);
                 free(new_line);
+                content = temp;
                 new_line = ft_get_next_line(fd);
             }
             message.content = content;
@@ -165,7 +172,7 @@ int main(int argc, char **argv)
         t_ssl_message   message;
         message.type = SLL_INPUT_STDIN;
         message.input = ft_strdup("(stdin)");
-        message.content = NULL;
+        message.output = NULL;
         
         new_line = ft_get_next_line(STDIN_FILENO);
         while (new_line)
@@ -186,12 +193,9 @@ int main(int argc, char **argv)
     }
 
     // Hashing
-    for (size_t i = 0; i < command->messages_count; i++)
-    {
-        int success = fptr(argc, argv, command);    
-        if (!success)
-            return (free_command(command), 1);
-    }
+    int success = fptr(argc, argv, command);    
+    if (!success)
+        return (free_command(command), 1);
 
     // Output
     for (size_t i = 0; i < command->messages_count; i++)

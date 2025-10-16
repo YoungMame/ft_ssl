@@ -28,10 +28,11 @@ static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t
     for (int i = 0; i < 4; i++)
     {
         char *tmp = append_h(digest, values[i]);
+        if (!digest)
+            return (free(tmp), free(digest),NULL);
         free(digest);
         digest = tmp;
-        if (!digest)
-            return NULL;
+
     }
 
     return digest;
@@ -183,9 +184,6 @@ static char *md5_hashing(char *message) {
     //         0xff & (h2 >> 0), 0xff & (h2 >> 8), 0xff & (h2 >> 16), 0xff & (h2 >> 24),
     //         0xff & (h3 >> 0), 0xff & (h3 >> 8), 0xff & (h3 >> 16), 0xff & (h3 >> 24));
 
-    free_chunk(M, chunks_count);
-    free(preproc_message);
-    free(K);
     return (free_chunk(M, chunks_count), free(K), free(preproc_message), digest);
 }
 
