@@ -4,7 +4,7 @@ CFLAGS = -Wall -Wextra -Werror
 SRC_DIR = src
 OBJ_DIR = .obj
 INC_DIR = include
-SRCS_LIST = main md5 sha256 preprocess common primes
+SRCS_LIST = main md5 sha256 preprocess common primes utils
 LIBFT_DIR = libft
 LIBFT = libft/libft.a
 

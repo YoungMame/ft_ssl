@@ -1,12 +1,12 @@
 #include "ft_ssl.h"
 
-// Retrieve original message length from the last 8 bytes of the padded message
+// Get original message length from the last 8 bytes of the padded message
 uint64_t get_message_len(const char *payload, size_t total_len)
 {
     uint64_t bit_len = 0;
     for (int i = 0; i < 8; i++)
     {
-        bit_len = (bit_len | ((uint64_t)(unsigned char)payload[total_len - 8 + i]) << (8 * i));
+        bit_len = (bit_len | ((uint64_t)payload[total_len - 8 + i]) << (8 * i));
     }
     return bit_len;
 }

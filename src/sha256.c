@@ -1,19 +1,5 @@
 # include "ft_ssl.h"
 
-
-// Σ1 =
-// (e rightrotate 6) xor
-// (e rightrotate 11) xor
-// (e rightrotate 25)
-
-// Choice = (e and f) xor ((not e) and g)
-// Σ0 =
-// (a rightrotate 2) xor
-// (a rightrotate 13) xor
-// (a rightrotate 22)
-// Majority =
-// (a and b) xor (a and c) xor (b and c)
-
 // We first implement sha256 used functions
 
 static uint32_t    sigma0(uint32_t a)
@@ -61,7 +47,7 @@ static uint32_t* sha256_init_K() {
         double cube_root = cbrt(prime);
         double fractional_part = cube_root - (uint32_t)cube_root;
 
-        uint32_t scaled64 = (uint32_t)(fractional_part * pow(2, 32));
+        uint32_t scaled64 = (uint32_t)(fractional_part * ft_pow(2, 32));
         uint32_t scaled = (uint32_t)scaled64;
         K[i] = scaled;
     }
@@ -69,6 +55,7 @@ static uint32_t* sha256_init_K() {
     return K;
 }
 
+// Append each hash values that result in hexadecimal format
 static char    *append_h(char *hash, uint32_t value)
 {
     char    *hex = ft_itoa_base_unsigned32(value, "0123456789abcdef", 8);
@@ -79,6 +66,7 @@ static char    *append_h(char *hash, uint32_t value)
     return str;
 }
 
+// Append each hash values that result in hexadecimal format
 static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t h3, uint32_t h4, uint32_t h5, uint32_t h6, uint32_t h7)
 {
     char *digest = ft_calloc(257, sizeof(char));
@@ -186,6 +174,7 @@ static char *sha256_hashing(char *message) {
                 W[i] = M[chunk][i];
         }
 
+        // Use the 16 first word to generate other words
         // wi = (wi - 16) + sigma0(wi - 15) + (wi - 7) + sigma1(wi - 2)
         for (size_t i = 16; i < 64; i++)
         {

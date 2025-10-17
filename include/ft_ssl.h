@@ -84,4 +84,9 @@ int *generate_primes(int len);
 // free
 void    free_command(t_ssl_command *command);
 
+// utils
+int ft_pow(int number, int pow);
+
+double ft_fabs(double number);
+
 

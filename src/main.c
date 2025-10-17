@@ -28,25 +28,6 @@ void    free_command(t_ssl_command *command)
     free(command);
 }
 
-// static void    free_message_content(t_ssl_message message)
-// {
-//     if (message.input)
-//     {
-//         free(message.input);
-//         message.input = NULL;
-//     }
-//     if (message.content)
-//     {
-//         free(message.content);
-//         message.content = NULL;
-//     }
-//     if (message.output)
-//     {
-//         free(message.output);
-//         message.output = NULL;
-//     }
-// }
-
 t_ssl_command   *init_command()
 {
     t_ssl_command   *command;

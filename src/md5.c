@@ -17,6 +17,7 @@ static char    *append_h(char *hash, uint32_t value)
     return str;
 }
 
+// Append each hash values that result in hexadecimal format
 static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t h3)
 {
     char *digest = malloc(257 * sizeof(char));
@@ -47,7 +48,7 @@ static uint32_t* md5_init_K() {
         return NULL;
     for (int i = 0; i < 64; i++)
     {
-        K[i] = (uint32_t)(fabs(sin(i + 1)) * pow(2, 32));
+        K[i] = (uint32_t)(ft_fabs(sin(i + 1)) * ft_pow(2, 32));
     }
     return K;
 }
@@ -179,10 +180,6 @@ static char *md5_hashing(char *message) {
 
     if (!digest)
         return (free(preproc_message), free(K), free_chunk(M, chunks_count), NULL);
-    // printf("digest by printf: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", 0xff & (h0 >> 0), 0xff & (h0 >> 8), 0xff & (h0 >> 16), 0xff & (h0 >> 24),
-    //         0xff & (h1 >> 0), 0xff & (h1 >> 8), 0xff & (h1 >> 16), 0xff & (h1 >> 24),
-    //         0xff & (h2 >> 0), 0xff & (h2 >> 8), 0xff & (h2 >> 16), 0xff & (h2 >> 24),
-    //         0xff & (h3 >> 0), 0xff & (h3 >> 8), 0xff & (h3 >> 16), 0xff & (h3 >> 24));
 
     return (free_chunk(M, chunks_count), free(K), free(preproc_message), digest);
 }
