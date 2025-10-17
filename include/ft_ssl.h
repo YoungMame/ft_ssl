@@ -89,4 +89,6 @@ int ft_pow(int number, int pow);
 
 double ft_fabs(double number);
 
+char    *read_fd(int fd);
+
 

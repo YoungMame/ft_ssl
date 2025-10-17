@@ -58,7 +58,7 @@ static uint32_t* sha256_init_K() {
 // Append each hash values that result in hexadecimal format
 static char    *append_h(char *hash, uint32_t value)
 {
-    char    *hex = ft_itoa_base_unsigned32(value, "0123456789abcdef", 8);
+    char    *hex = ft_itoa_base_unsigned32(value, "0123456789abcdef", 0);
     if (!hex)
         return (NULL);
     char    *str = ft_strjoin(hash, hex);
@@ -240,6 +240,7 @@ int sha256(int argc, char **argv, t_ssl_command *command) {
     (void)argv;
     for (size_t i = 0; i < command->messages_count; i++)
     {
+        printf("hashing: \"%s\"", command->messages[i].content);
         char    *output = sha256_hashing(command->messages[i].content);
         if (!output)
             return (0);

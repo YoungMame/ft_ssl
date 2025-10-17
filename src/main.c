@@ -119,24 +119,15 @@ int main(int argc, char **argv)
             message.type = SSL_INPUT_FILE;
             message.input = input;
             message.output = NULL;
-            char	*new_line;
-            char    *content = ft_strdup("\0");
             int fd = open(input, O_RDONLY);
             if (fd < 0)
             {
                 ft_printf("ft_ssl: %s: No such file or directory\n", input);
-                return (free_command(command), free(input), free(content), 1);
+                return (free_command(command), free(input), 1);
             }
-            new_line = ft_get_next_line(fd);
-            while (new_line)
-            {
-                char    *temp = ft_strjoin(content, new_line);
-                free(content);
-                free(new_line);
-                content = temp;
-                new_line = ft_get_next_line(fd);
-            }
-            message.content = content;
+            message.content = read_fd(fd);
+            if (!message.content)
+                return (free_command(command), 1);
             command->messages[command->messages_count] = message;
             command->messages_count++;
         }
@@ -145,27 +136,14 @@ int main(int argc, char **argv)
     // Read from stdin if no messages were added from arguments, or if -p flag is used
     if (command->messages_count == 0 || command->is_outputing_stdin)
     {
-        char    *new_line;
-        char    *content = ft_strdup("");
-        if (content == NULL)
-            return (free_command(command), 1);
-
         t_ssl_message   message;
         message.type = SSL_INPUT_STDIN;
         message.input = ft_strdup("stdin");
         message.output = NULL;
-        
-        new_line = ft_get_next_line(STDIN_FILENO);
-        while (new_line)
-        {
-            char *temp = ft_strjoin(content, new_line);
-            free(content);
-            content = temp;
-            free(new_line);
-            new_line = ft_get_next_line(STDIN_FILENO);
-        }
-        
-        message.content = content;
+
+        message.content = read_fd(STDIN_FILENO);
+        if (!message.content)
+            return (free_command(command), 1);
         command->messages[command->messages_count] = message;
         command->messages_count++;
     }
