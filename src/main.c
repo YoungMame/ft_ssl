@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 
             t_ssl_message   message;
             char            *input = ft_strdup(argv[i + 1]);
-            message.type = SLL_INPUT_STRING;
+            message.type = SSL_INPUT_STRING;
             message.input = input;
             message.content = ft_strdup(input);
             message.output = NULL;
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
             t_ssl_message   message;
 
             char    *input = ft_strdup(argv[i]);
-            message.type = SLL_INPUT_FILE;
+            message.type = SSL_INPUT_FILE;
             message.input = input;
             message.output = NULL;
             char	*new_line;
@@ -151,16 +151,13 @@ int main(int argc, char **argv)
             return (free_command(command), 1);
 
         t_ssl_message   message;
-        message.type = SLL_INPUT_STDIN;
-        message.input = ft_strdup("(stdin)");
+        message.type = SSL_INPUT_STDIN;
+        message.input = ft_strdup("stdin");
         message.output = NULL;
         
         new_line = ft_get_next_line(STDIN_FILENO);
         while (new_line)
         {
-            if (command->is_outputing_stdin)
-                ft_printf("%s", new_line); // Echo stdin when -p flag is used
-
             char *temp = ft_strjoin(content, new_line);
             free(content);
             content = temp;
@@ -185,21 +182,19 @@ int main(int argc, char **argv)
         {
             if (command->is_format_reversed)
             {
-                if (command->messages[i].type == SLL_INPUT_STRING)
+                if (command->messages[i].type == SSL_INPUT_STRING)
                     ft_printf("%s \"%s\"\n", command->messages[i].output, command->messages[i].input);
-                else if (command->messages[i].type == SLL_INPUT_STDIN && command->is_outputing_stdin)
+                else if (command->messages[i].type == SSL_INPUT_STDIN && command->is_outputing_stdin)
                     ft_printf("(\"%s\")= %s\n", command->messages[i].content, command->messages[i].output);
-                else if (command->messages[i].type == SLL_INPUT_STDIN)
-                    ft_printf("%s\n", command->messages[i].output);
+                else if (command->messages[i].type == SSL_INPUT_STDIN)
+                    ft_printf("(\"%s\")= %s\n", command->messages[i].input, command->messages[i].output);
                 else
                     ft_printf("%s %s\n", command->messages[i].output, command->messages[i].input);
             }
             else
             {
-                if (command->messages[i].type == SLL_INPUT_STRING)
-                    ft_printf("(\"%s\")= %s\n", command->messages[i].input, command->messages[i].output);
-                else if (command->messages[i].type == SLL_INPUT_STDIN && command->is_outputing_stdin)
-                    ft_printf("(\"%s\")= %s\n", command->messages[i].content, command->messages[i].output);
+                if ((command->messages[i].type == SSL_INPUT_STDIN && command->is_outputing_stdin) || command->messages[i].type == SSL_INPUT_STRING)
+                    ft_printf("%s(\"%s\")= %s\n", command->name, command->messages[i].content, command->messages[i].output);
                 else
                     ft_printf("%s(%s)= %s\n", command->name, command->messages[i].input, command->messages[i].output);
             }

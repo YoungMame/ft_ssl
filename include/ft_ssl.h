@@ -11,9 +11,9 @@
 # include "libft.h"
 
 typedef enum Ssl_input_type { 
-    SLL_INPUT_FILE,
-    SLL_INPUT_STRING,
-    SLL_INPUT_STDIN
+    SSL_INPUT_FILE,
+    SSL_INPUT_STRING,
+    SSL_INPUT_STDIN
 } t_ssl_input_type;
 
 typedef struct  s_ssl_message {
