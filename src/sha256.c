@@ -143,10 +143,10 @@ static char *sha256_hashing(char *message) {
             size_t current_byte = word + byte;
 
             // Store bytes in the word big endian
-            M[i][j] = ((uint32_t)preproc_message[current_byte] << 24)
-                | ((uint32_t)preproc_message[current_byte + 1] << 16)
-                | ((uint32_t)preproc_message[current_byte + 2] << 8)
-                | ((uint32_t)preproc_message[current_byte + 3]);
+            M[i][j] = ((uint32_t)(unsigned char)preproc_message[current_byte] << 24)
+                | ((uint32_t)(unsigned char)preproc_message[current_byte + 1] << 16)
+                | ((uint32_t)(unsigned char)preproc_message[current_byte + 2] << 8)
+                | ((uint32_t)(unsigned char)preproc_message[current_byte + 3]);
         }
 
         // DEBUG
