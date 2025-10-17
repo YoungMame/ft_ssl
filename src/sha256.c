@@ -52,7 +52,7 @@ static uint32_t* sha256_init_K() {
         K[i] = scaled;
     }
     free(primes);
-    return K;
+    return (K);
 }
 
 // Append each hash values that result in hexadecimal format
@@ -63,7 +63,7 @@ static char    *append_h(char *hash, uint32_t value)
         return (NULL);
     char    *str = ft_strjoin(hash, hex);
     free(hex);
-    return str;
+    return (str);
 }
 
 // Append each hash values that result in hexadecimal format
@@ -89,7 +89,7 @@ static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t
         digest = tmp;
     }
 
-    return digest;
+    return (digest);
 }
 
 // Main SHA256 function
@@ -103,7 +103,7 @@ static char *sha256_hashing(char *message) {
 
     K = sha256_init_K();
     if (!K)
-    return (NULL);
+        return (NULL);
 
     // Preprocess the message in a char array where each byte is an element of the array
     preproc_message = get_preprocessed_message(message, &total_len, true);

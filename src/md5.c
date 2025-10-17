@@ -36,7 +36,7 @@ static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t
 
     }
 
-    return digest;
+    return (digest);
 }
 
 // Use the sine of each integer in radian as random values
@@ -50,7 +50,7 @@ static uint32_t* md5_init_K() {
     {
         K[i] = (uint32_t)(ft_fabs(sin(i + 1)) * ft_pow(2, 32));
     }
-    return K;
+    return (K);
 }
 
 // Main MD5 function
@@ -64,7 +64,8 @@ static char *md5_hashing(char *message) {
     size_t total_len;
 
     K = md5_init_K();
-        if (!K) return NULL;
+    if (!K)
+        return (NULL);
 
     // Preprocess the message in a char array where each byte is an element of the array
     preproc_message = get_preprocessed_message(message, &total_len, false);

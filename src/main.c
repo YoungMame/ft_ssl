@@ -79,7 +79,7 @@ int main(int argc, char **argv)
         ft_printf("\n");
         ft_printf("flags:\n");
         ft_printf("-p -q -r -s\n");
-        return (1);
+        return (free_command(command), 1);
     }
 
     for (int i = 2; i < argc; i++)

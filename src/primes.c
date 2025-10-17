@@ -27,7 +27,7 @@ int *generate_primes(int len)
             temp = ft_calloc(primes_counter + 2, sizeof(int));
             if (temp == NULL)
                 return (NULL);
-            memcpy(temp, array, sizeof(int) * primes_counter);
+            ft_memcpy(temp, array, sizeof(int) * primes_counter);
             free(array);
             array = temp;
             temp = NULL;

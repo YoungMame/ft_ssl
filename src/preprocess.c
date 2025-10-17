@@ -22,7 +22,7 @@ char *get_preprocessed_message(char *message, size_t *total_len, bool is_size_bi
     size_t message_len;
     char *padded_message;
 
-    message_len = strlen(message);
+    message_len = ft_strlen(message);
     padding_len = get_padding_len(message_len);
     *total_len = message_len + 1 + (padding_len / 8) + 8;
 
