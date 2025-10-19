@@ -10,6 +10,28 @@
 # include <stdbool.h>
 # include "libft.h"
 
+# define SSL_MODE_SHA256 0
+# define SSL_MODE_MD5 1
+
+# define SSL_MODE_COUNT 2
+
+/* function pointer for algorithm entry */
+typedef int (*t_ssl_fptr)(int argc, char **argv, t_ssl_command *command);
+
+/* metadata for each algorithm */
+typedef struct s_ssl_algo {
+    const char      *name;
+    t_ssl_fptr      f;
+    const int       nb_options;
+    const char      **options;
+    const char      **options_long;
+    const char      **args;
+    const char      **descriptions;
+} t_ssl_algo;
+
+/* array defined in a .c file */
+extern const t_ssl_algo g_ssl_algos[];
+
 typedef enum Ssl_input_type { 
     SSL_INPUT_FILE,
     SSL_INPUT_STRING,
@@ -23,14 +45,18 @@ typedef struct  s_ssl_message {
     t_ssl_input_type    type;
 } t_ssl_message;
 
-typedef struct  s_ssl_command {
+typedef struct s_ssl_flag {
+    int     index;
+    char    *value;
+}   t_ssl_flag;
+
+typedef struct s_ssl_command {
     char            *name;
-    bool            is_quiet;
-    bool            is_format_reversed;
-    bool            is_outputing_stdin;
-    size_t          messages_count;
-    t_ssl_message   messages[999];
-} t_ssl_command;
+    t_ssl_flag      *flags
+    int             mode;
+    size_t          message_count;
+    t_ssl_command   messages[999];
+}
 
 // MD5 CONSTANTS
 # define MD5_CHUNK_SIZE 512
@@ -43,7 +69,7 @@ typedef struct  s_ssl_command {
     5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20, \
     4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, \
     6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21 \
-}
+};
 
 // SHA256 CONSTANTS
 
@@ -65,6 +91,9 @@ int md5(int argc, char **argv, t_ssl_command *command);
 
 // sha256.c
 int sha256(int argc, char **argv, t_ssl_command *command);
+
+//parse.c
+int parse(int argc, char **argv, t_ssl_command *command);
 
 // common.c
 
@@ -90,5 +119,9 @@ int ft_pow(int number, int pow);
 double ft_fabs(double number);
 
 char    *read_fd(int fd);
+
+// algos.c
+
+void    init_algos();
 
 
