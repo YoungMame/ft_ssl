@@ -41,3 +41,36 @@ uint32_t **allocate_chunk(size_t chunk_count)
     }
     return (M);
 }
+
+t_hash_params   *process_command_flags(t_ssl_command *command)
+{
+    t_hash_params *params;
+
+    params = ft_calloc(1, sizeof(t_hash_params));
+    if (!params)
+        return (NULL);
+    params->should_read_stdin = false;
+    params->is_quiet = false;
+    params->is_reversed = false;
+
+    for (size_t i = 0; i < command->flags_count; i++)
+    {
+        if (command->flags[i].index == 0)
+            params->should_read_stdin = true;
+        else if (command->flags[i].index == 1)
+            params->is_quiet = true;
+        else if (command->flags[i].index == 2)
+            params->is_reversed = true;
+        else if (command->flags[i].index == 3)
+        {
+            command->messages[command->message_count].input = ft_strdup(command->flags[i].value);
+            if (command->messages[command->message_count].input == NULL)
+            {
+                return (free(params), NULL);
+            }
+            command->messages[command->message_count].type = SSL_INPUT_STRING;
+            command->message_count += 1;
+        }
+    }
+    return (params);
+}
