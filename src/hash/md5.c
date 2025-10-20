@@ -232,10 +232,8 @@ static char *md5_hashing(char *message) {
     return (free_chunk(M, chunks_count), free(K), free(preproc_message), digest);
 }
 
-int md5(int argc, char **argv, t_ssl_command *command) {
-    (void)argc;
-    (void)argv;
-    for (size_t i = 0; i < command->messages_count; i++)
+int md5(t_ssl_command *command) {
+    for (size_t i = 0; i < command->message_count; i++)
     {
         char    *output = md5_hashing(command->messages[i].content);
         if (!output)

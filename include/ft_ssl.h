@@ -9,28 +9,12 @@
 # include <math.h>
 # include <stdbool.h>
 # include "libft.h"
+# include "hash.h"
 
 # define SSL_MODE_SHA256 0
 # define SSL_MODE_MD5 1
 
 # define SSL_MODE_COUNT 2
-
-/* function pointer for algorithm entry */
-typedef int (*t_ssl_fptr)(int argc, char **argv, t_ssl_command *command);
-
-/* metadata for each algorithm */
-typedef struct s_ssl_algo {
-    const char      *name;
-    t_ssl_fptr      f;
-    const int       nb_options;
-    const char      **options;
-    const char      **options_long;
-    const char      **args;
-    const char      **descriptions;
-} t_ssl_algo;
-
-/* array defined in a .c file */
-extern const t_ssl_algo g_ssl_algos[];
 
 typedef enum Ssl_input_type { 
     SSL_INPUT_FILE,
@@ -51,12 +35,28 @@ typedef struct s_ssl_flag {
 }   t_ssl_flag;
 
 typedef struct s_ssl_command {
-    t_ssl_flag      *flags
+    t_ssl_flag      *flags;
     int             flag_count;
     int             mode;
     size_t          message_count;
-    t_ssl_command   messages[999];
-}
+    t_ssl_message   messages[999];
+}   t_ssl_command;
+
+/* function pointer for algorithm entry */
+typedef int (*t_ssl_fptr)(t_ssl_command *command);
+
+/* metadata for each algorithm */
+typedef struct s_ssl_algo {
+    char      *name;
+    t_ssl_fptr      f;
+    int       nb_options;
+    const char      **options;
+    const char      **options_long;
+    const char      **args;
+    const char      **descriptions;
+} t_ssl_algo;
+
+extern t_ssl_algo g_ssl_algos[];
 
 // MD5 CONSTANTS
 # define MD5_CHUNK_SIZE 512
@@ -83,19 +83,19 @@ typedef struct s_ssl_command {
 # define SHA256_INITIAL_G 0x1f83d9ab
 # define SHA256_INITIAL_H 0x5be0cd19
 
-// preprocess.c
+// hash/preprocess.c
 char *get_preprocessed_message(char *message, size_t *total_len, bool is_size_big_endian);
 
-// md5.c
-int md5(int argc, char **argv, t_ssl_command *command);
+// hash/md5.c
+int md5(t_ssl_command *command);
 
-// sha256.c
-int sha256(int argc, char **argv, t_ssl_command *command);
+// hash/sha256.c
+int sha256(t_ssl_command *command);
 
-//parse.c
+// parse.c
 int parse(int argc, char **argv, t_ssl_command *command);
 
-// common.c
+// hash/common.c
 
 uint64_t get_message_len(const char *payload, size_t total_len);
 
@@ -103,11 +103,13 @@ uint32_t **allocate_chunk(size_t chunk_count);
 
 void    free_chunk(uint32_t **M, size_t chunk_count);
 
+// common.c
+
 uint32_t    left_rotate(uint32_t value, int shift);
 
 uint32_t    right_rotate(uint32_t value, int shift);
 
-// primes.c
+// hash/primes.c
 int *generate_primes(int len);
 
 // free
@@ -119,9 +121,3 @@ int ft_pow(int number, int pow);
 double ft_fabs(double number);
 
 char    *read_fd(int fd);
-
-// algos.c
-
-void    init_algos();
-
-

@@ -235,10 +235,8 @@ static char *sha256_hashing(char *message) {
     return (digest);
 }
 
-int sha256(int argc, char **argv, t_ssl_command *command) {
-    (void)argc;
-    (void)argv;
-    for (size_t i = 0; i < command->messages_count; i++)
+int sha256(t_ssl_command *command) {
+    for (size_t i = 0; i < command->message_count; i++)
     {
         printf("hashing: \"%s\"", command->messages[i].content);
         char    *output = sha256_hashing(command->messages[i].content);

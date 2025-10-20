@@ -16,10 +16,12 @@ static int add_flag(t_ssl_command *command, int index, char *value)
     return (1);
 }
 
-t_ssl_command   *parse(int argc, char **argv, t_ssl_command *command)
+int parse(int argc, char **argv, t_ssl_command *command)
 {
     t_ssl_algo  algo;
     int         algo_index = -1;
+
+    // printf("hello %s \n", hash_options[0]);
 
     for (int i = 0; i < SSL_MODE_COUNT; i++)
     {
@@ -30,11 +32,10 @@ t_ssl_command   *parse(int argc, char **argv, t_ssl_command *command)
             command->mode = i;
             command->flags = ft_calloc(algo.nb_options + 1, sizeof(t_ssl_flag));
             if (!command->flags)
-                return (free_command(command), 1); // TODO manage malloc error
+                return (free_command(command), 0); // TODO manage malloc error
             break ;
         }
     }
-
     if (algo_index == -1)
     {
         ft_printf("ft_ssl: Error: %s is an invalid command.\n", argv[1]);
@@ -43,30 +44,30 @@ t_ssl_command   *parse(int argc, char **argv, t_ssl_command *command)
         {
             printf("%s\n", g_ssl_algos[i].name);
         }
-        return (free_command(command), 1);
+        return (free_command(command), 0);
     }
 
     for (int i = 2; i < argc; i++)
     {
         for (int j = 0; j < algo.nb_options; j++)
         {
-            if (!ft_strncmp(argv[i], algo.options[j], ft_strlen(argv[i])) || !ft_strncmp(argv[i], algo.options_long[j], ft_strlen(argv[i])))
+            if (!ft_strncmp(argv[i], algo.options[j], ft_strlen(argv[i])) || (algo.options_long[j] && !(ft_strncmp(argv[i], algo.options_long[j], ft_strlen(argv[i])))))
             {
                 if (algo.args[j] != NULL)
                 {
                     if (i + 1 >= argc)
-                        return (free_command(command), 1); // TODO handle missing option argument
+                        return (free_command(command), 0); // TODO handle missing option argument
                     i++;
                     if (!(add_flag(command, j, argv[i])))
-                        return (free_command(command), 1);  // TODO handle malloc error
+                        return (free_command(command), 0);  // TODO handle malloc error
                 }
                 else
                 {
                     if (!(add_flag(command, j, NULL)))
-                        return (free_command(command), 1);  // TODO handle malloc error
+                        return (free_command(command), 0);  // TODO handle malloc error
                 }
             }
         }
     }
-    return (command);
+    return (1);
 }

@@ -4,7 +4,7 @@ CFLAGS = -Wall -Wextra -Werror
 SRC_DIR = src
 OBJ_DIR = .obj
 INC_DIR = include
-SRCS_LIST = main md5 sha256 preprocess common primes utils
+SRCS_LIST = main common utils algos parsing/parse hash/common hash/md5 hash/sha256 hash/preprocess hash/primes
 LIBFT_DIR = libft
 LIBFT = libft/libft.a
 
@@ -21,7 +21,8 @@ $(EXECUTABLE): $(LIBFT) $(OBJS)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	echo "Compiling $<..."
 	@mkdir -p $(OBJ_DIR)
-	@$(CC) $(CFLAGS) $(INCS) -c $< -o $@ 
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS) $(INCS) -c $< -o $@
 
 $(LIBFT): $(LIBFT_DIR)
 	echo "Building libft..."

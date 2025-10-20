@@ -2,12 +2,7 @@
 
 void    free_command(t_ssl_command *command)
 {
-    if (command->name)
-    {
-        free(command->name);
-        command->name = NULL;
-    }
-    for (size_t i = 0; i < command->flag_count; i++)
+    for (int i = 0; i < command->flag_count; i++)
     {
         t_ssl_flag flag = command->flags[i];
         if (flag.value)
@@ -16,7 +11,7 @@ void    free_command(t_ssl_command *command)
     }
     free(command->flags);
 
-    for(size_t i = 0; i < command->messages_count; i++)
+    for(size_t i = 0; i < command->message_count; i++)
     {
         if (command->messages[i].input)
         {
@@ -45,19 +40,16 @@ t_ssl_command   *init_command()
         return (NULL);
         
     command->flag_count = 0;
-    command->messages_count = 0;
+    command->message_count = 0;
     command->flags = NULL;
-    command->mod = -1;
-    ft_memset()
+    command->mode = -1;
+    ft_memset(command->messages, 0, sizeof(command->messages));
     return (command);
 }
 
 int main(int argc, char **argv)
 {
     t_ssl_command   *command;
-    int             (*fptr)(t_ssl_command*);
-
-    g_ssl_algos = init_algos();
 
     // Input
     if (argc < 2) {
@@ -69,9 +61,13 @@ int main(int argc, char **argv)
     if (command == NULL)
         return (free_command(command), 1);
 
-    command = parse(argv, argv, command);
+    int success = parse(argc, argv, command);
+    if (!success)
+        return (1);
 
-    // TODO g_ssl_algos[command->mode].fptr(command);
+    ft_printf("Command Name: %s\n", command->flags[0].value);
+
+    g_ssl_algos[command->mode].f(command);
     
     return (free_command(command), 0);
 }
