@@ -1,5 +1,52 @@
 #include "ft_ssl.h"
 
+// read -s
+
+// t_ssl_message   message;
+// char            *input = ft_strdup(argv[i + 1]);
+// message.type = SSL_INPUT_STRING;
+// message.input = input;
+// message.content = ft_strdup(input);
+// message.output = NULL;
+// command->messages[command->messages_count] = message;
+// command->messages_count++;
+// i++;
+
+// read fd
+
+// t_ssl_message   message;
+
+// char    *input = ft_strdup(argv[i]);
+// message.type = SSL_INPUT_FILE;
+// message.input = input;
+// message.output = NULL;
+// int fd = open(input, O_RDONLY);
+// if (fd < 0)
+// {
+//     ft_printf("ft_ssl: %s: No such file or directory\n", input);
+//     return (free_command(command), free(input), 1);
+// }
+// message.content = read_fd(fd);
+// if (!message.content)
+//     return (free_command(command), 1);
+// command->messages[command->messages_count] = message;
+// command->messages_count++;
+
+// Read from stdin if no messages were added from arguments, or if -p flag is used
+// if (command->messages_count == 0 || command->is_outputing_stdin)
+// {
+//     t_ssl_message   message;
+//     message.type = SSL_INPUT_STDIN;
+//     message.input = ft_strdup("stdin");
+//     message.output = NULL;
+
+//     message.content = read_fd(STDIN_FILENO);
+//     if (!message.content)
+//         return (free_command(command), 1);
+//     command->messages[command->messages_count] = message;
+//     command->messages_count++;
+// }
+
 static char    *append_h(char *hash, uint32_t value)
 {
     // Bit swap to little-endian

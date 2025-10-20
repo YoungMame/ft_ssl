@@ -51,8 +51,8 @@ typedef struct s_ssl_flag {
 }   t_ssl_flag;
 
 typedef struct s_ssl_command {
-    char            *name;
     t_ssl_flag      *flags
+    int             flag_count;
     int             mode;
     size_t          message_count;
     t_ssl_command   messages[999];

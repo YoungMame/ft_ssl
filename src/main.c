@@ -7,6 +7,15 @@ void    free_command(t_ssl_command *command)
         free(command->name);
         command->name = NULL;
     }
+    for (size_t i = 0; i < command->flag_count; i++)
+    {
+        t_ssl_flag flag = command->flags[i];
+        if (flag.value)
+            free(flag.value);
+
+    }
+    free(command->flags);
+
     for(size_t i = 0; i < command->messages_count; i++)
     {
         if (command->messages[i].input)
@@ -35,20 +44,20 @@ t_ssl_command   *init_command()
     if (!command)
         return (NULL);
         
-    ft_memset(command, 0, sizeof(t_ssl_command));
+    command->flag_count = 0;
     command->messages_count = 0;
-    command->is_format_reversed = false;
-    command->is_outputing_stdin = false;
-    command->is_quiet = false;
-    command->messages_count = 0;
-    command->name = NULL;
+    command->flags = NULL;
+    command->mod = -1;
+    ft_memset()
     return (command);
 }
 
 int main(int argc, char **argv)
 {
     t_ssl_command   *command;
-    int             (*fptr)(int, char**, t_ssl_command*);
+    int             (*fptr)(t_ssl_command*);
+
+    g_ssl_algos = init_algos();
 
     // Input
     if (argc < 2) {
@@ -60,36 +69,9 @@ int main(int argc, char **argv)
     if (command == NULL)
         return (free_command(command), 1);
 
+    command = parse(argv, argv, command);
 
-    // Output
-    for (size_t i = 0; i < command->messages_count; i++)
-    {
-        if (!command->is_quiet)
-        {
-            if (command->is_format_reversed)
-            {
-                if (command->messages[i].type == SSL_INPUT_STRING)
-                    ft_printf("%s \"%s\"\n", command->messages[i].output, command->messages[i].input);
-                else if (command->messages[i].type == SSL_INPUT_STDIN && command->is_outputing_stdin)
-                    ft_printf("(\"%s\")= %s\n", command->messages[i].content, command->messages[i].output);
-                else if (command->messages[i].type == SSL_INPUT_STDIN)
-                    ft_printf("(\"%s\")= %s\n", command->messages[i].input, command->messages[i].output);
-                else
-                    ft_printf("%s %s\n", command->messages[i].output, command->messages[i].input);
-            }
-            else
-            {
-                if ((command->messages[i].type == SSL_INPUT_STDIN && command->is_outputing_stdin) || command->messages[i].type == SSL_INPUT_STRING)
-                    ft_printf("%s(\"%s\")= %s\n", command->name, command->messages[i].content, command->messages[i].output);
-                else
-                    ft_printf("%s(%s)= %s\n", command->name, command->messages[i].input, command->messages[i].output);
-            }
-        }
-        else
-        {
-            ft_printf("%s\n", command->messages[i].output);
-        }
-    }
+    // TODO g_ssl_algos[command->mode].fptr(command);
     
     return (free_command(command), 0);
 }
