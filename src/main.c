@@ -65,8 +65,7 @@ int main(int argc, char **argv)
     if (!success)
         return (1);
 
-    ft_printf("Command Name: %s\n", command->flags[0].value);
-
+    printf("Selected algorithm: %s\n", g_ssl_algos[command->mode].name);
     g_ssl_algos[command->mode].f(command);
     
     return (free_command(command), 0);

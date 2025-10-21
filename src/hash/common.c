@@ -42,35 +42,116 @@ uint32_t **allocate_chunk(size_t chunk_count)
     return (M);
 }
 
-t_hash_params   *process_command_flags(t_ssl_command *command)
+int             process_command_inputs(t_ssl_command *command, t_hash_params params)
 {
-    t_hash_params *params;
+    // If no inputs were provided, read from stdin
+    if (command->message_count == 0 || params.should_read_stdin)
+    {
+        command->messages[command->message_count].type = SSL_INPUT_STDIN;
+        command->messages[command->message_count].input = ft_strdup("stdin");
+        if (!command->messages[command->message_count].input)
+            return (printf("Error: malloc failed\n"), 0); // TODO handle malloc error
+        command->message_count += 1;
+    }
 
-    params = ft_calloc(1, sizeof(t_hash_params));
-    if (!params)
-        return (NULL);
-    params->should_read_stdin = false;
-    params->is_quiet = false;
-    params->is_reversed = false;
+    for (size_t i = 0; i < command->message_count; i++)
+    {
+        t_ssl_message   *message = &command->messages[i];
 
-    for (size_t i = 0; i < command->flags_count; i++)
+        if (message->type == SSL_INPUT_STDIN)
+        {
+            // TODO read from stdin
+            message->content = read_fd(STDIN_FILENO);
+            if (!message->content)
+                return (0); // TODO handle read error
+        }
+        else if (message->type == SSL_INPUT_FILE)
+        {
+            int fd = open(message->input, O_RDONLY);
+            if (fd < 0)
+            {
+                ft_printf("ft_ssl: %s: No such file or directory\n", message->input);
+                return (0); // TODO handle open error
+            }
+            message->content = read_fd(fd);
+            close(fd);
+            if (!message->content)
+                return (0); // TODO handle read error
+        }
+        else if (message->type == SSL_INPUT_STRING)
+        {
+            printf("type string detected\n");
+            message->content = ft_strdup(message->input);
+            if (!message->content)
+                return (0); // TODO handle malloc error
+        }
+    }
+    return (1);
+}
+
+t_hash_params   process_command_flags(t_ssl_command *command)
+{
+    t_hash_params params;
+
+    params.should_read_stdin = false;
+    params.is_quiet = false;
+    params.is_reversed = false;
+
+    for (int i = 0; i < command->flag_count; i++)
     {
         if (command->flags[i].index == 0)
-            params->should_read_stdin = true;
+            params.should_read_stdin = true;
         else if (command->flags[i].index == 1)
-            params->is_quiet = true;
+            params.is_quiet = true;
         else if (command->flags[i].index == 2)
-            params->is_reversed = true;
+            params.is_reversed = true;
         else if (command->flags[i].index == 3)
         {
             command->messages[command->message_count].input = ft_strdup(command->flags[i].value);
-            if (command->messages[command->message_count].input == NULL)
-            {
-                return (free(params), NULL);
-            }
             command->messages[command->message_count].type = SSL_INPUT_STRING;
             command->message_count += 1;
         }
     }
     return (params);
+}
+
+void    output_messages(t_ssl_command *command, t_hash_params params, const char *algo_name)
+{
+    for (size_t i = 0; i < command->message_count; i++)
+    {
+        t_ssl_message   *message = &command->messages[i];
+
+        if (params.is_quiet)
+        {
+            printf("%s\n", message->output);
+        }
+        else if (params.is_reversed)
+        {
+            if (message->type == SSL_INPUT_STRING)
+                printf("%s %s\n", message->output, message->input);
+            else if (message->type == SSL_INPUT_FILE)
+                printf("%s %s\n", message->output, message->input);
+            else
+            {
+                if (params.should_read_stdin)
+                    printf("%s(%s)= %s\n", algo_name, message->content,message->output);
+                else
+                    printf("%s(%s)= %s\n", algo_name, message->input, message->output);
+            }
+        }
+        else
+        {
+            if (message->type == SSL_INPUT_STRING)
+                printf("%s(%s)= %s\n", algo_name, message->input, message->output);
+            else if (message->type == SSL_INPUT_FILE)
+                printf("%s(%s)= %s\n", algo_name, message->input, message->output);
+            else
+            {
+                if (params.should_read_stdin)
+                    printf("%s(%s)= %s\n", algo_name, message->content,message->output);
+                else
+                    printf("%s(%s)= %s\n", algo_name, message->input, message->output);
+            }
+        }
+    }
 }

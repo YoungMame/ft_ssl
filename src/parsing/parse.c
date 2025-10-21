@@ -1,10 +1,5 @@
 #include "ft_ssl.h"
 
-static void realloc_flags(t_ssl_command *command)
-{
-
-}
-
 static int add_flag(t_ssl_command *command, int index, char *value)
 {
     t_ssl_flag  flag;
@@ -19,11 +14,12 @@ static int add_flag(t_ssl_command *command, int index, char *value)
     command->flag_count += 1;
     new_flags = ft_calloc(command->flag_count + 1, sizeof(t_ssl_flag));
     if (!new_flags)
-        return ; // TODO handle malloc error
-    for (int i = 0; i < command->flag_count; i++)
+        return (0); // TODO handle malloc error
+    for (int i = 0; i < command->flag_count - 1; i++)
     {
         new_flags[i] = command->flags[i];
     }
+    new_flags[command->flag_count] = (t_ssl_flag){0, NULL};
     free(command->flags);
     command->flags = new_flags;
     flag.value = t_value;
@@ -62,10 +58,12 @@ int parse(int argc, char **argv, t_ssl_command *command)
 
     for (int i = 2; i < argc; i++)
     {
+        bool    is_flag_spotted = false;
         for (int j = 0; j < algo.nb_options; j++)
         {
             if (!ft_strncmp(argv[i], algo.options[j], ft_strlen(argv[i])) || (algo.options_long[j] && !(ft_strncmp(argv[i], algo.options_long[j], ft_strlen(argv[i])))))
             {
+                is_flag_spotted = true;
                 if (algo.args[j] != NULL)
                 {
                     if (i + 1 >= argc)
@@ -79,7 +77,14 @@ int parse(int argc, char **argv, t_ssl_command *command)
                     if (!(add_flag(command, j, NULL)))
                         return (free_command(command), 0);  // TODO handle malloc error
                 }
+                break ;
             }
+        }
+        if (!is_flag_spotted)
+        {
+            command->messages[command->message_count].input = ft_strdup(argv[i]);
+            command->messages[command->message_count].type = SSL_INPUT_FILE;
+            command->message_count++;
         }
     }
     return (1);

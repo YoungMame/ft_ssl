@@ -1,6 +1,6 @@
 EXECUTABLE = ft_ssl
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror -g3
 SRC_DIR = src
 OBJ_DIR = .obj
 INC_DIR = include

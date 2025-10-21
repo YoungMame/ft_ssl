@@ -25,22 +25,13 @@ char    *read_fd(int fd)
     size_t     bytes_read;
     size_t	total_size = 0;
 
-	result = malloc(0);
-	if (!result)
-	{
-		ft_printf("ft_ssl: malloc error\n");
-		return (NULL);
-	}
+	result = ft_calloc(1, sizeof(char));
+    if (!result)
+        return (NULL);
 
-    while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0)
+    while ((bytes_read = read(fd, buffer, sizeof(buffer) - 1)) > 0)
     {
-        char *temp = malloc(total_size + bytes_read);
-        if (!temp)
-        {
-            free(result);
-            ft_printf("ft_ssl: malloc error\n");
-            return (NULL);
-        }
+        buffer[bytes_read] = '\0';
         char *tmp = ft_strjoin(result, buffer);
         if (!tmp)
         {

@@ -236,14 +236,20 @@ static char *sha256_hashing(char *message) {
 }
 
 int sha256(t_ssl_command *command) {
+    t_hash_params   params = process_command_flags(command);
+    int             success = process_command_inputs(command, params);
+    if (!success)
+        return (0); // TODO handle error
+
     for (size_t i = 0; i < command->message_count; i++)
     {
-        printf("hashing: \"%s\"", command->messages[i].content);
         char    *output = sha256_hashing(command->messages[i].content);
         if (!output)
             return (0);
         command->messages[i].output = output;
     }
+
+    output_messages(command, params, "SHA256");
     
     return (1);
 }

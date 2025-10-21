@@ -1,36 +1,6 @@
 #include "ft_ssl.h"
 
-// read -s
 
-// t_ssl_message   message;
-// char            *input = ft_strdup(argv[i + 1]);
-// message.type = SSL_INPUT_STRING;
-// message.input = input;
-// message.content = ft_strdup(input);
-// message.output = NULL;
-// command->messages[command->messages_count] = message;
-// command->messages_count++;
-// i++;
-
-// read fd
-
-// t_ssl_message   message;
-
-// char    *input = ft_strdup(argv[i]);
-// message.type = SSL_INPUT_FILE;
-// message.input = input;
-// message.output = NULL;
-// int fd = open(input, O_RDONLY);
-// if (fd < 0)
-// {
-//     ft_printf("ft_ssl: %s: No such file or directory\n", input);
-//     return (free_command(command), free(input), 1);
-// }
-// message.content = read_fd(fd);
-// if (!message.content)
-//     return (free_command(command), 1);
-// command->messages[command->messages_count] = message;
-// command->messages_count++;
 
 // Read from stdin if no messages were added from arguments, or if -p flag is used
 // if (command->messages_count == 0 || command->is_outputing_stdin)
@@ -233,6 +203,11 @@ static char *md5_hashing(char *message) {
 }
 
 int md5(t_ssl_command *command) {
+    t_hash_params   params = process_command_flags(command);
+    int             success = process_command_inputs(command, params);
+    if (!success)
+        return (0); // TODO handle error
+
     for (size_t i = 0; i < command->message_count; i++)
     {
         char    *output = md5_hashing(command->messages[i].content);
@@ -240,6 +215,8 @@ int md5(t_ssl_command *command) {
             return (0);
         command->messages[i].output = output;
     }
+
+    output_messages(command, params, "MD5");
     
     return (1);
 }
