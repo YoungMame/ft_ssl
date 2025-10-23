@@ -1,31 +1,16 @@
 #include "ft_ssl.h"
 
-
-
-// Read from stdin if no messages were added from arguments, or if -p flag is used
-// if (command->messages_count == 0 || command->is_outputing_stdin)
-// {
-//     t_ssl_message   message;
-//     message.type = SSL_INPUT_STDIN;
-//     message.input = ft_strdup("stdin");
-//     message.output = NULL;
-
-//     message.content = read_fd(STDIN_FILENO);
-//     if (!message.content)
-//         return (free_command(command), 1);
-//     command->messages[command->messages_count] = message;
-//     command->messages_count++;
-// }
-
 static char    *append_h(char *hash, uint32_t value)
 {
-    // Bit swap to little-endian
+    // Bit swap to big-endian becuase itoa swap bits order
     uint32_t o1, o2, o3, o4;
     o1 = (0xFF000000 & (value << 24));
     o2 = (0x00FF0000 & (value << 8));
     o3 = (0x0000FF00 & (value >> 8));
     o4 = (0x000000FF & (value >> 24));
     uint32_t little_endian_value = o1 | o2 | o3 | o4;
+    printf("little_endian_value: %08x\n", little_endian_value);
+    printf("value: %08x\n", value);
     char    *hex = ft_itoa_base_unsigned32(little_endian_value, "0123456789abcdef", 8);
     if (!hex)
         return (NULL);
@@ -52,7 +37,6 @@ static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t
         digest = tmp;
 
     }
-
     return (digest);
 }
 
@@ -65,7 +49,7 @@ static uint32_t* md5_init_K() {
         return NULL;
     for (int i = 0; i < 64; i++)
     {
-        K[i] = (uint32_t)(ft_fabs(sin(i + 1)) * ft_pow(2, 32));
+        K[i] = (uint32_t)(fabs(sin(i + 1)) * pow(2, 32));
     }
     return (K);
 }
@@ -101,7 +85,7 @@ static char *md5_hashing(char *message) {
         {
             
             size_t word = i * 64;
-            size_t byte = j * 4;
+            size_t byte = j * 4; // divide a 32 bits in 4 bytes
             size_t current_byte = word + byte;
 
             // Store bytes in the word

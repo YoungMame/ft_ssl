@@ -42,5 +42,9 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re
+test: all
+	python3 test/md5_test.py
+	python3 test/sha256_test.py
+
+.PHONY: all clean fclean re test
 

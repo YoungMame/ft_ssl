@@ -116,8 +116,5 @@ int *generate_primes(int len);
 void    free_command(t_ssl_command *command);
 
 // utils
-int ft_pow(int number, int pow);
-
-double ft_fabs(double number);
 
 char    *read_fd(int fd);

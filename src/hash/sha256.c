@@ -47,7 +47,7 @@ static uint32_t* sha256_init_K() {
         double cube_root = cbrt(prime);
         double fractional_part = cube_root - (uint32_t)cube_root;
 
-        uint32_t scaled64 = (uint32_t)(fractional_part * ft_pow(2, 32));
+        uint32_t scaled64 = (uint32_t)(fractional_part * pow(2, 32));
         uint32_t scaled = (uint32_t)scaled64;
         K[i] = scaled;
     }
@@ -58,7 +58,7 @@ static uint32_t* sha256_init_K() {
 // Append each hash values that result in hexadecimal format
 static char    *append_h(char *hash, uint32_t value)
 {
-    char    *hex = ft_itoa_base_unsigned32(value, "0123456789abcdef", 0);
+    char    *hex = ft_itoa_base_unsigned32(value, "0123456789abcdef", 8);
     if (!hex)
         return (NULL);
     char    *str = ft_strjoin(hash, hex);
