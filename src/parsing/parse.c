@@ -51,7 +51,7 @@ int parse(int argc, char **argv, t_ssl_command *command)
         ft_printf("Available commands:\n");
         for (int i = 0; i < SSL_MODE_COUNT; i++)
         {
-            printf("%s\n", g_ssl_algos[i].name);
+            ft_printf("%s\n", g_ssl_algos[i].name);
         }
         return (free_command(command), 0);
     }

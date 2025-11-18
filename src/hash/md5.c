@@ -9,8 +9,6 @@ static char    *append_h(char *hash, uint32_t value)
     o3 = (0x0000FF00 & (value >> 8));
     o4 = (0x000000FF & (value >> 24));
     uint32_t little_endian_value = o1 | o2 | o3 | o4;
-    printf("little_endian_value: %08x\n", little_endian_value);
-    printf("value: %08x\n", value);
     char    *hex = ft_itoa_base_unsigned32(little_endian_value, "0123456789abcdef", 8);
     if (!hex)
         return (NULL);

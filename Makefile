@@ -4,7 +4,7 @@ CFLAGS = -Wall -Wextra -Werror -g3
 SRC_DIR = src
 OBJ_DIR = .obj
 INC_DIR = include
-SRCS_LIST = main common utils algos parsing/parse hash/common hash/md5 hash/sha256 hash/preprocess hash/primes
+SRCS_LIST = main common utils algos parsing/parse hash/common hash/md5 hash/sha256 hash/whirlpool hash/preprocess hash/primes
 LIBFT_DIR = libft
 LIBFT = libft/libft.a
 

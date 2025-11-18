@@ -5,7 +5,6 @@ char    *read_fd(int fd)
 	char	buffer[4096];
     char    *result;
     size_t     bytes_read;
-    size_t	total_size = 0;
 
 	result = ft_calloc(1, sizeof(char));
     if (!result)
@@ -23,7 +22,6 @@ char    *read_fd(int fd)
         }
         free(result);
         result = tmp;
-        total_size += bytes_read;
     }
     return (result);
 }
