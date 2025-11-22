@@ -30,5 +30,14 @@ t_ssl_algo g_ssl_algos[SSL_MODE_COUNT] = {
         .options_long = hash_options_long,
         .args = hash_args,
         .descriptions = hash_descriptions
+    },
+    {
+        .name = "whirlpool",
+        .f = whirlpool,
+        .nb_options = 4,
+        .options = hash_options,
+        .options_long = hash_options_long,
+        .args = hash_args,
+        .descriptions = hash_descriptions
     }
 };

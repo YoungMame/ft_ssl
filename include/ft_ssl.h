@@ -13,8 +13,9 @@
 
 # define SSL_MODE_SHA256 0
 # define SSL_MODE_MD5 1
+# define SSL_MODE_WHIRLPOOL 2
 
-# define SSL_MODE_COUNT 2
+# define SSL_MODE_COUNT 3
 
 typedef enum Ssl_input_type { 
     SSL_INPUT_FILE,
@@ -86,21 +87,18 @@ extern t_ssl_algo g_ssl_algos[];
 // WHIRLPOOL CONSTANTS
 
 // Round constants
-extern const uint64_t whirlpool_rc[10];
+extern const uint8_t M[64];
 
  //Whirlpool T box = S box combined with multiplication in GF(2^8)
-extern const uint64_t whirlpool_t[256];
+extern const uint8_t SBOX[256];
 
-
-
-
-# define WHIRLPOOL_TBOX whirlpool_t
-
-// hash/whirlpool.c
-char *whirlpool(t_ssl_command *command);
+extern const uint8_t whirlpool_rc[10][8] ;
 
 // hash/preprocess.c
 char *get_preprocessed_message(char *message, size_t *total_len, bool is_size_big_endian);
+
+// hash/whirlpool.c
+int whirlpool(t_ssl_command *command);
 
 // hash/md5.c
 int md5(t_ssl_command *command);
@@ -117,7 +115,11 @@ uint64_t get_message_len(const char *payload, size_t total_len);
 
 uint32_t **allocate_chunk(size_t chunk_count);
 
+uint8_t **allocate_chunk_height(size_t chunk_count);
+
 void    free_chunk(uint32_t **M, size_t chunk_count);
+
+void    free_chunk_height(uint8_t **M, size_t chunk_count);
 
 // common.c
 

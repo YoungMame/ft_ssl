@@ -21,6 +21,15 @@ void    free_chunk(uint32_t **M, size_t chunk_count)
     free(M);
 }
 
+void    free_chunk_height(uint8_t **M, size_t chunk_count)
+{
+    for (size_t i = 0; i < chunk_count; i++)
+    {
+        free(M[i]);
+    }
+    free(M);
+}
+
 // Allocate the good number of chunks and the words in it
 uint32_t **allocate_chunk(size_t chunk_count)
 {
@@ -31,6 +40,27 @@ uint32_t **allocate_chunk(size_t chunk_count)
     for (size_t i = 0; i < chunk_count; i++)
     {
         M[i] = ft_calloc(16, sizeof(uint32_t));
+        if (!M[i])
+        {
+            for (size_t j = 0; j < i; j++)
+                free(M[j]);
+            free(M);
+            return (NULL);
+        }
+    }
+    return (M);
+}
+
+// Allocate the good number of chunks and the words in it
+uint8_t **allocate_chunk_height(size_t chunk_count)
+{
+    uint8_t **M = ft_calloc(chunk_count, sizeof(uint8_t*));
+    if (!M)
+        return (NULL);
+
+    for (size_t i = 0; i < chunk_count; i++)
+    {
+        M[i] = ft_calloc(16, sizeof(uint8_t));
         if (!M[i])
         {
             for (size_t j = 0; j < i; j++)
