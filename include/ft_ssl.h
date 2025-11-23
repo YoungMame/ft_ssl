@@ -92,10 +92,9 @@ extern const uint8_t M[64];
  //Whirlpool T box = S box combined with multiplication in GF(2^8)
 extern const uint8_t SBOX[256];
 
-extern const uint8_t whirlpool_rc[10][8] ;
-
 // hash/preprocess.c
 char *get_preprocessed_message(char *message, size_t *total_len, bool is_size_big_endian);
+char *get_preprocessed_message_whirlpool(char *message, size_t *total_len, bool is_size_big_endian);
 
 // hash/whirlpool.c
 int whirlpool(t_ssl_command *command);
