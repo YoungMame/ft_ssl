@@ -167,7 +167,17 @@ static char *whirlpool_hashing(char *message) {
 
     // Preprocess the message in a char array where each byte is an element of the array
     // Whirlpool : longueur sur 256 bits (32 octets), big-endian
-    preproc_message = get_preprocessed_message_whirlpool(message, &total_len, true);
+    preproc_message = get_preprocessed_message_whirlpool(message, &total_len);
+
+    printf("Message length: %zu bytes (%zu bits)\n", ft_strlen(message), ft_strlen(message) * 8);
+    
+    // Afficher les 32 derniers octets (longueur encodée)
+    printf("Last 32 bytes (length field):\n");
+    for (int i = 0; i < 32; i++) {
+        printf("%02x ", (uint8_t)preproc_message[total_len - 32 + i]);
+        if ((i + 1) % 8 == 0) printf("\n");
+    }
+    printf("\n");
 
     // Break the message into 512-bit chunks (each chunk is 64 bytes)
     size_t chunks_count = total_len / 64;

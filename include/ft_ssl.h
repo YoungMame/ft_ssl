@@ -84,8 +84,6 @@ extern t_ssl_algo g_ssl_algos[];
 # define SHA256_INITIAL_G 0x1f83d9ab
 # define SHA256_INITIAL_H 0x5be0cd19
 
-// WHIRLPOOL CONSTANTS
-
 // Round constants
 extern const uint8_t M[64];
 
@@ -94,7 +92,7 @@ extern const uint8_t SBOX[256];
 
 // hash/preprocess.c
 char *get_preprocessed_message(char *message, size_t *total_len, bool is_size_big_endian);
-char *get_preprocessed_message_whirlpool(char *message, size_t *total_len, bool is_size_big_endian);
+char *get_preprocessed_message_whirlpool(char *message, size_t *total_len);
 
 // hash/whirlpool.c
 int whirlpool(t_ssl_command *command);

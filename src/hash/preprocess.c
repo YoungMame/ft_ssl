@@ -15,7 +15,7 @@ static int get_padding_len(size_t message_len, size_t size_bytes)
     return (padding_len);
 }
 
-// Padding + longueur sur size_bytes octets (8 pour MD5/SHA, 32 pour Whirlpool)
+// Padding + longueur sur 8 octets (MD5/SHA)
 char *get_preprocessed_message(char *message, size_t *total_len, bool is_size_big_endian)
 {
     int padding_len;
@@ -46,7 +46,7 @@ char *get_preprocessed_message(char *message, size_t *total_len, bool is_size_bi
     return (padded_message);
 }
 
-char *get_preprocessed_message_whirlpool(char *message, size_t *total_len, bool is_size_big_endian)
+char *get_preprocessed_message_whirlpool(char *message, size_t *total_len)
 {
     int padding_len;
     size_t message_len;
@@ -63,14 +63,11 @@ char *get_preprocessed_message_whirlpool(char *message, size_t *total_len, bool 
     ft_memcpy(padded_message, message, message_len);
     padded_message[message_len] = 0x80; // padding bit '1'
 
-    // Encoder la longueur en bits sur 32 octets (big-endian ou little-endian)
     uint64_t bit_len = (uint64_t)message_len * 8;
     
+    size_t len_start = *total_len - 8;
     for (size_t i = 0; i < 8; i++) {
-        if (is_size_big_endian)
-            padded_message[*total_len - 32 + i + 24] = (bit_len >> (8 * (7 - i))) & 0xFF;
-        else
-            padded_message[*total_len - 32 + i + 24] = (bit_len >> (8 * i)) & 0xFF;
+        padded_message[len_start + i] = (bit_len >> (8 * (7 - i))) & 0xFF;
     }
 
     return (padded_message);
