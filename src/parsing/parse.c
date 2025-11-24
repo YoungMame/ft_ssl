@@ -9,12 +9,12 @@ static int add_flag(t_ssl_command *command, int index, char *value)
     {
         t_value = ft_strdup(value);
         if (!t_value)
-            return (0); // TODO MALLOC ERROR
+            return (ft_printf("Error: malloc failed\n"), 0);
     }
     command->flag_count += 1;
     new_flags = ft_calloc(command->flag_count + 1, sizeof(t_ssl_flag));
     if (!new_flags)
-        return (0); // TODO handle malloc error
+        return (ft_printf("Error: malloc failed\n"), free(t_value), 0);
     for (int i = 0; i < command->flag_count - 1; i++)
     {
         new_flags[i] = command->flags[i];
@@ -67,15 +67,15 @@ int parse(int argc, char **argv, t_ssl_command *command)
                 if (algo.args[j] != NULL)
                 {
                     if (i + 1 >= argc)
-                        return (free_command(command), 0); // TODO handle missing option argument
+                        return (free_command(command), ft_printf("Error: missing option argument"), 0);
                     i++;
                     if (!(add_flag(command, j, argv[i])))
-                        return (free_command(command), 0);  // TODO handle malloc error
+                        return (free_command(command), 0);
                 }
                 else
                 {
                     if (!(add_flag(command, j, NULL)))
-                        return (free_command(command), 0);  // TODO handle malloc error
+                        return (free_command(command), 0);
                 }
                 break ;
             }
@@ -83,6 +83,8 @@ int parse(int argc, char **argv, t_ssl_command *command)
         if (!is_flag_spotted)
         {
             command->messages[command->message_count].input = ft_strdup(argv[i]);
+            if (!command->messages[command->message_count].input)
+                return (free_command(command), ft_printf("Error: malloc failed\n"), 0);
             command->messages[command->message_count].type = SSL_INPUT_FILE;
             command->message_count++;
         }

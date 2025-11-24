@@ -100,3 +100,22 @@ A hashing algorithm is a one-way function that translates a text to a determined
         h0 += a
 
 7. Concatenate the 8 buffers of 32 bits to produce the final hash (256 bits)
+
+#### Whirlpool
+- Produces a 512-bit hash value
+- Slower than SHA-256
+
+##### Functioning
+1. Pad the message so its length in bits + 256 is multiple of 512
+2. Append the original length of the message (in bits) as a 256-bit integer
+3. Initialize the hash value with specific constants
+4. Divide the message into 512-bit chunks
+5. Process each chunk in 10 rounds
+    5.1 Initialize the state matrix with the current hash value XORed with the current chunk
+    5.2 For each of the 10 rounds:
+        a. AddRoundKey: XOR the state matrix with the round key derived from the hash value
+        b. SubBytes: Substitute each byte in the state matrix using a fixed S-box
+        c. ShiftColumns: Cyclically shift the columns of the state matrix by different offsets
+        d. MixRows: Mix the bytes in each row of the state matrix using a linear transformation
+    5.3 Update the hash value by XORing it with the final state matrix
+6. The final hash value is the concatenation of the 8 rows of the hash value matrix (512 bits)

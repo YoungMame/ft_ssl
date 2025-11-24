@@ -35,7 +35,8 @@ static char    *append_h(char *hash, uint8_t value)
 // Append each hash values that result in hexadecimal format
 static char    *final_hash_value(uint8_t values[64])
 {
-    char *digest = malloc(257 * sizeof(char));
+    char *digest = ft_calloc(257, sizeof(char));
+    // char *digest = malloc(257 * sizeof(char));
     if (!digest)
         return NULL;
     digest[0] = '\0';
@@ -168,16 +169,8 @@ static char *whirlpool_hashing(char *message) {
     // Preprocess the message in a char array where each byte is an element of the array
     // Whirlpool : longueur sur 256 bits (32 octets), big-endian
     preproc_message = get_preprocessed_message_whirlpool(message, &total_len);
-
-    printf("Message length: %zu bytes (%zu bits)\n", ft_strlen(message), ft_strlen(message) * 8);
-    
-    // Afficher les 32 derniers octets (longueur encodée)
-    printf("Last 32 bytes (length field):\n");
-    for (int i = 0; i < 32; i++) {
-        printf("%02x ", (uint8_t)preproc_message[total_len - 32 + i]);
-        if ((i + 1) % 8 == 0) printf("\n");
-    }
-    printf("\n");
+    if (!preproc_message)
+        return (NULL);
 
     // Break the message into 512-bit chunks (each chunk is 64 bytes)
     size_t chunks_count = total_len / 64;
@@ -194,16 +187,6 @@ static char *whirlpool_hashing(char *message) {
             size_t byte_index = i * 64 + j;
             M[i][j] = (uint8_t)preproc_message[byte_index];
         }
-    }
-
-    for (size_t chunk = 0; chunk < chunks_count; chunk++) {
-        printf("Block %zu:\n", chunk);
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++)
-                printf("%02x ", M[chunk][row * 8 + col]);
-            printf("\n");
-        }
-        printf("\n");
     }
 
     // Process each 512-bit chunk
@@ -224,7 +207,6 @@ static char *whirlpool_hashing(char *message) {
         // H = H XOR M XOR E_H(M)
         for (int i = 0; i < 64; ++i)
             H[i] ^= M[chunk][i] ^ state[i];
-        printf("Block %zu processed.\n", chunk);
     }
 
     char *digest = final_hash_value(H);
@@ -239,7 +221,7 @@ int whirlpool(t_ssl_command *command) {
     t_hash_params   params = process_command_flags(command);
     int             success = process_command_inputs(command, params);
     if (!success)
-        return (0); // TODO handle error
+        return (0);
 
     for (size_t i = 0; i < command->message_count; i++)
     {

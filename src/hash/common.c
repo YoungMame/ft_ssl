@@ -60,7 +60,7 @@ uint8_t **allocate_chunk_height(size_t chunk_count)
 
     for (size_t i = 0; i < chunk_count; i++)
     {
-        M[i] = ft_calloc(16, sizeof(uint8_t));
+        M[i] = ft_calloc(64, sizeof(uint8_t));
         if (!M[i])
         {
             for (size_t j = 0; j < i; j++)
@@ -80,7 +80,7 @@ int             process_command_inputs(t_ssl_command *command, t_hash_params par
         command->messages[command->message_count].type = SSL_INPUT_STDIN;
         command->messages[command->message_count].input = ft_strdup("stdin");
         if (!command->messages[command->message_count].input)
-            return (printf("Error: malloc failed\n"), 0); // TODO handle malloc error
+            return (ft_printf("Error: malloc failed\n"), 0);
         command->message_count += 1;
     }
 
@@ -92,26 +92,23 @@ int             process_command_inputs(t_ssl_command *command, t_hash_params par
         {
             message->content = read_fd(STDIN_FILENO);
             if (!message->content)
-                return (0); // TODO handle read error
+                return (ft_printf("Error: cannot read\n"), 0);
         }
         else if (message->type == SSL_INPUT_FILE)
         {
             int fd = open(message->input, O_RDONLY);
             if (fd < 0)
-            {
-                ft_printf("ft_ssl: %s: No such file or directory\n", message->input);
-                return (0); // TODO handle open error
-            }
+                return (ft_printf("ft_ssl: %s: No such file or directory\n", message->input), 0);
             message->content = read_fd(fd);
             close(fd);
             if (!message->content)
-                return (0); // TODO handle read error
+                return (ft_printf("Error: cannot read\n"), 0);
         }
         else if (message->type == SSL_INPUT_STRING)
         {
             message->content = ft_strdup(message->input);
             if (!message->content)
-                return (0); // TODO handle malloc error
+                return (ft_printf("Error: malloc failed\n"), 0);
         }
     }
     return (1);
@@ -182,4 +179,5 @@ void    output_messages(t_ssl_command *command, t_hash_params params, const char
             }
         }
     }
+    return ;
 }

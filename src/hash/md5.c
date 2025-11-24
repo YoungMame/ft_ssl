@@ -188,7 +188,7 @@ int md5(t_ssl_command *command) {
     t_hash_params   params = process_command_flags(command);
     int             success = process_command_inputs(command, params);
     if (!success)
-        return (0); // TODO handle error
+        return (0);
 
     for (size_t i = 0; i < command->message_count; i++)
     {
