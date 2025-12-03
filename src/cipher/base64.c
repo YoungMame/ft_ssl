@@ -5,8 +5,59 @@ static char *base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxy
 static char *malloc_buffer(int input_length) {
     int bytes_groups_count = input_length / 3 + (input_length % 3 != 0);
     char *result = ft_calloc(bytes_groups_count * 4 + 1, sizeof(char));
+    return result;
+}
+
+static char *malloc_decode_buffer(int input_length) {
+    int bytes_groups_count = input_length / 4 + (input_length % 4 != 0);
+    char *result = ft_calloc(bytes_groups_count * 3 + 1, sizeof(char));
+    return result;
+}
+
+static int get_base64_index(char c) {
+    for (int i = 0; i < 64; i++) {
+        if (base64_chars[i] == c)
+            return (i);
+    }
+    return (-1);
+}
+
+static char *base64_decode(const char *input) {
+    int input_len = strlen(input);
+    char *result = malloc_decode_buffer(input_len);
     if (!result)
-        ft_printf("ft_ssl: Error: Memory error\n");
+        return ft_printf("ft_ssl: Error: Memory error\n"), NULL;
+
+    char current_c = 0x0;
+
+    int byte_index = 0;
+    int bit_index = 0;
+
+    for (int i = 0; i < input_len; i++)
+    {
+        int index = get_base64_index(input[i]);
+        // manage = padding
+        if (index == -1)
+            break ;
+
+        char index_char = (char)index;
+
+        for (int j = 0; j < 6; j++)
+        {
+            char bit = (index_char >> (5 - j)) & 0x1;
+            current_c = (current_c << 1) | bit;
+            bit_index++;
+            if (bit_index == 8)
+            {
+                // printf("Decoded char: %c\n", current_c);
+                result[byte_index] = current_c;
+                bit_index = 0;
+                current_c = 0x0;
+                byte_index++;
+            }
+        }
+    }
+
     return result;
 }
 
@@ -67,11 +118,20 @@ int base64(t_ssl_command *command)
     if (!success)
         return (0);
 
-    char    *output = base64_encode(command->messages[0].content);
-    if (!output)
-        return (0);
-    command->messages[0].output = output;
-
+    if (params.decode)
+    {
+        char    *output = base64_decode(command->messages[0].content);
+        if (!output)
+            return (0);
+        command->messages[0].output = output;
+    }
+    else
+    {
+        char    *output = base64_encode(command->messages[0].content);
+        if (!output)
+            return (0);
+        command->messages[0].output = output;
+    }
     base64_output_messages(command, params, "base64");
      if (params.output_fd != STDOUT_FILENO)
         close(params.output_fd);
