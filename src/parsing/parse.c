@@ -37,7 +37,7 @@ int parse(int argc, char **argv, t_ssl_command *command)
 
     for (int i = 0; i < SSL_MODE_COUNT; i++)
     {
-        if (!ft_strncmp(argv[1], g_ssl_algos[i].name, ft_strlen(argv[1])))
+        if (!ft_strncmp(argv[1], g_ssl_algos[i].name, ft_strlen(argv[1])) && g_ssl_algos[i].f != NULL)
         {
             algo_index = i;
             algo = g_ssl_algos[algo_index];
@@ -47,8 +47,8 @@ int parse(int argc, char **argv, t_ssl_command *command)
     }
     if (algo_index == -1)
     {
-        ft_printf("ft_ssl: Error: %s is an invalid command.\n", argv[1]);
-        ft_printf("Available commands:\n");
+        ft_printf("ft_ssl: Error: '%s' is an invalid command.\n\n", argv[1]);
+        ft_printf("Available commands:\n\n");
         for (int i = 0; i < SSL_MODE_COUNT; i++)
         {
             ft_printf("%s\n", g_ssl_algos[i].name);

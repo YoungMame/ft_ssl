@@ -236,8 +236,8 @@ static char *sha256_hashing(char *message) {
 }
 
 int sha256(t_ssl_command *command) {
-    t_hash_params   params = process_command_flags(command);
-    int             success = process_command_inputs(command, params);
+    t_hash_params   params = hash_process_command_flags(command);
+    int             success = hash_process_command_inputs(command, params);
     if (!success)
         return (0);
 
@@ -249,7 +249,7 @@ int sha256(t_ssl_command *command) {
         command->messages[i].output = output;
     }
 
-    output_messages(command, params, "SHA256");
+    hash_output_messages(command, params, "SHA256");
     
     return (1);
 }

@@ -218,8 +218,8 @@ static char *whirlpool_hashing(char *message) {
 }
 
 int whirlpool(t_ssl_command *command) {
-    t_hash_params   params = process_command_flags(command);
-    int             success = process_command_inputs(command, params);
+    t_hash_params   params = hash_process_command_flags(command);
+    int             success = hash_process_command_inputs(command, params);
     if (!success)
         return (0);
 
@@ -231,7 +231,7 @@ int whirlpool(t_ssl_command *command) {
         command->messages[i].output = output;
     }
 
-    output_messages(command, params, "Whirlpool");
+    hash_output_messages(command, params, "Whirlpool");
 
     return (1);
 }

@@ -72,7 +72,7 @@ uint8_t **allocate_chunk_height(size_t chunk_count)
     return (M);
 }
 
-int             process_command_inputs(t_ssl_command *command, t_hash_params params)
+int             hash_process_command_inputs(t_ssl_command *command, t_hash_params params)
 {
     // If no inputs were provided, read from stdin
     if (command->message_count == 0 || params.should_read_stdin)
@@ -114,7 +114,7 @@ int             process_command_inputs(t_ssl_command *command, t_hash_params par
     return (1);
 }
 
-t_hash_params   process_command_flags(t_ssl_command *command)
+t_hash_params   hash_process_command_flags(t_ssl_command *command)
 {
     t_hash_params params;
 
@@ -140,7 +140,7 @@ t_hash_params   process_command_flags(t_ssl_command *command)
     return (params);
 }
 
-void    output_messages(t_ssl_command *command, t_hash_params params, const char *algo_name)
+void    hash_output_messages(t_ssl_command *command, t_hash_params params, const char *algo_name)
 {
     for (size_t i = 0; i < command->message_count; i++)
     {
