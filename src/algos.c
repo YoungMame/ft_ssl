@@ -15,8 +15,8 @@ static const char *base64_options[] = { "-d", "-e", "-i", "-o", NULL };
 static const char *base64_options_long[] = { "-decode", "-encode", "-input", "-output", NULL };
 static const char *base64_args[] = { NULL, NULL, "<file>", "<file>", NULL };
 static const char *base64_descriptions[] = {
-    "encode data to base64",
     "decode data from base64",
+    "encode data to base64",
     "use <file> as input",
     "use <file> as output",
     NULL
