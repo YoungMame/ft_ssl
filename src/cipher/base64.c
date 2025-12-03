@@ -1,15 +1,15 @@
 # include "ft_ssl.h"
 
-static char *base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static const char *base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-static char *malloc_buffer(int input_length) {
-    int bytes_groups_count = input_length / 3 + (input_length % 3 != 0);
+static char *malloc_buffer(size_t input_length) {
+    size_t bytes_groups_count = input_length / 3 + (input_length % 3 != 0);
     char *result = ft_calloc(bytes_groups_count * 4 + 1, sizeof(char));
     return result;
 }
 
-static char *malloc_decode_buffer(int input_length) {
-    int bytes_groups_count = input_length / 4 + (input_length % 4 != 0);
+static char *malloc_decode_buffer(size_t input_length) {
+    size_t bytes_groups_count = input_length / 4 + (input_length % 4 != 0);
     char *result = ft_calloc(bytes_groups_count * 3 + 1, sizeof(char));
     return result;
 }
@@ -23,34 +23,42 @@ static int get_base64_index(char c) {
 }
 
 static char *base64_decode(const char *input) {
-    int input_len = strlen(input);
+    size_t input_len = strlen(input);
     char *result = malloc_decode_buffer(input_len);
     if (!result)
         return ft_printf("ft_ssl: Error: Memory error\n"), NULL;
 
-    char current_c = 0x0;
+    unsigned char current_c = 0x0;
 
-    int byte_index = 0;
+    size_t byte_index = 0;
     int bit_index = 0;
 
-    for (int i = 0; i < input_len; i++)
+    for (size_t i = 0; i < input_len; i++)
     {
-        int index = get_base64_index(input[i]);
-        // manage = padding
-        if (index == -1)
-            break ;
+        unsigned char ch = input[i];
 
-        char index_char = (char)index;
+        /* padding: end of meaningful data */
+        if (ch == '=')
+            break;
+
+        if (ch == '\n' || ch == '\r' || ch == '\t' || ch == ' ')
+            continue;
+
+        int index = get_base64_index((char)ch);
+        /* ignore any other invalid characters */
+        if (index == -1)
+            continue;
+
+        unsigned char index_char = (unsigned char)index;
 
         for (int j = 0; j < 6; j++)
         {
-            char bit = (index_char >> (5 - j)) & 0x1;
-            current_c = (current_c << 1) | bit;
+            unsigned char bit = (index_char >> (5 - j)) & 0x1u;
+            current_c = (unsigned char)((current_c << 1) | bit);
             bit_index++;
             if (bit_index == 8)
             {
-                // printf("Decoded char: %c\n", current_c);
-                result[byte_index] = current_c;
+                result[byte_index] = (char)current_c;
                 bit_index = 0;
                 current_c = 0x0;
                 byte_index++;
@@ -62,21 +70,23 @@ static char *base64_decode(const char *input) {
 }
 
 static char *base64_encode(const char *input) {
-    int input_len = strlen(input);
+    size_t input_len = strlen(input);
     char *result = malloc_buffer(input_len);
     if (!result)
         return ft_printf("ft_ssl: Error: Memory error\n"), NULL;
 
-    int base_index = 0x0;
+    unsigned int base_index = 0x0;
+    int          newline_count = 0;
+    
 
-    int byte_index = 0;
+    size_t byte_index = 0;
     int bit_index = 0;
 
-    for (int i = 0; i < input_len; i++)
+    for (size_t i = 0; i < input_len; i++)
     {
         for (int j = 0; j < 8; j++)
         {
-            char bit = (input[i] >> (7 - j)) & 0x1;
+            unsigned char bit = (input[i] >> (7 - j)) & 0x1u;
             base_index = (base_index << 1) | bit;
             bit_index++;
             if (bit_index == 6)
@@ -85,11 +95,17 @@ static char *base64_encode(const char *input) {
                 bit_index = 0;
                 base_index = 0x0;
                 byte_index++;
+                if ((byte_index - newline_count) % 64 == 0)
+                {
+                    result[byte_index] = '\n';
+                    byte_index++;
+                    newline_count++;
+                }
             }
         }
     }
     
-    // Get the last bits
+    /* Get the last bits */
     if (bit_index > 0)
     {
         base_index = base_index << (6 - bit_index);
@@ -97,7 +113,7 @@ static char *base64_encode(const char *input) {
         byte_index++;
     }
 
-    // Base64 padding
+    /* Base64 padding */
     if (input_len % 3 == 1)
     {
         result[byte_index++] = '=';
@@ -108,6 +124,10 @@ static char *base64_encode(const char *input) {
         result[byte_index++] = '=';
     }
 
+    if (byte_index > 0 && result[byte_index - 1] == '\n')
+        byte_index--;
+
+    result[byte_index] = '\0';
     return result;
 }
 

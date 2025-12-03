@@ -17,7 +17,7 @@ char    *read_fd(int fd)
         if (!tmp)
         {
             free(result);
-            ft_printf("ft_ssl: malloc error\n");
+            ft_printf("ft_ssl: Error: malloc error\n");
             return (NULL);
         }
         free(result);

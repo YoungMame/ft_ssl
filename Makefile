@@ -46,7 +46,7 @@ re: fclean all
 test: all
 	python3 test/md5_test.py
 	python3 test/sha256_test.py
-	python3 test/whirlpool_test.py
+	python3 test/base64_test.py
 
 .PHONY: all clean fclean re test
 
