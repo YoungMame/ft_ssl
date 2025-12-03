@@ -12,7 +12,7 @@
 # include "hash.h"
 # include "cipher.h"
 
-# define SSL_MODE_COUNT 5
+# define SSL_MODE_COUNT 6
 
 typedef enum ssl_input_type { 
     SSL_INPUT_FILE,
@@ -52,6 +52,7 @@ typedef struct s_ssl_algo {
     const char      **options_long;
     const char      **args;
     const char      **descriptions;
+    bool            noflag_as_file;
 } t_ssl_algo;
 
 extern t_ssl_algo g_ssl_algos[];
@@ -64,6 +65,9 @@ int md5(t_ssl_command *command);
 
 // hash/sha256.c
 int sha256(t_ssl_command *command);
+
+// cipher/base64.c
+int base64(t_ssl_command *command);
 
 // parse.c
 int parse(int argc, char **argv, t_ssl_command *command);

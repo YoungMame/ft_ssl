@@ -1,16 +1,12 @@
 # include "ft_ssl.h"
 
-int             base64_process_command_inputs(t_ssl_command *command, t_base64_params params)
+int             base64_process_command_inputs(t_ssl_command *command)
 {
-    // If no inputs were provided, read from stdin
-    if (command->message_count == 0 || params.should_read_stdin)
-    {
-        command->messages[command->message_count].type = SSL_INPUT_STDIN;
-        command->messages[command->message_count].input = ft_strdup("stdin");
-        if (!command->messages[command->message_count].input)
-            return (ft_printf("Error: malloc failed\n"), 0);
-        command->message_count += 1;
-    }
+    command->messages[command->message_count].type = SSL_INPUT_STDIN;
+    command->messages[command->message_count].input = ft_strdup("stdin");
+    if (!command->messages[command->message_count].input)
+        return (ft_printf("Error: malloc failed\n"), 0);
+    command->message_count += 1;
 
     for (size_t i = 0; i < command->message_count; i++)
     {
@@ -32,12 +28,6 @@ int             base64_process_command_inputs(t_ssl_command *command, t_base64_p
             if (!message->content)
                 return (ft_printf("Error: cannot read\n"), 0);
         }
-        else if (message->type == SSL_INPUT_STRING)
-        {
-            message->content = ft_strdup(message->input);
-            if (!message->content)
-                return (ft_printf("Error: malloc failed\n"), 0);
-        }
     }
     return (1);
 }
@@ -47,20 +37,25 @@ t_base64_params   base64_process_command_flags(t_ssl_command *command)
     t_base64_params params;
 
     params.decode = false;
+    params.output_fd = STDOUT_FILENO;
 
     for (int i = 0; i < command->flag_count; i++)
     {
         if (command->flags[i].index == 0)
-            params.should_read_stdin = true;
+            params.decode = true;
         else if (command->flags[i].index == 1)
-            params.is_quiet = true;
+            params.decode = false;
         else if (command->flags[i].index == 2)
-            params.is_reversed = true;
-        else if (command->flags[i].index == 3)
         {
             command->messages[command->message_count].input = ft_strdup(command->flags[i].value);
-            command->messages[command->message_count].type = SSL_INPUT_STRING;
+            command->messages[command->message_count].type = SSL_INPUT_FILE;
             command->message_count += 1;
+        }
+        else if (command->flags[i].index == 3)
+        {
+            params.output_fd = open(command->flags[i].value, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (params.output_fd < 0)
+                return (ft_printf("ft_ssl: Error: %s: Cannot open output file\n", command->flags[i].value), params);
         }
     }
     return (params);
@@ -68,42 +63,13 @@ t_base64_params   base64_process_command_flags(t_ssl_command *command)
 
 void    base64_output_messages(t_ssl_command *command, t_base64_params params, const char *algo_name)
 {
+    (void)algo_name;
     for (size_t i = 0; i < command->message_count; i++)
     {
         t_ssl_message   *message = &command->messages[i];
 
-        if (params.is_quiet)
-        {
-            ft_printf("%s\n", message->output);
-        }
-        else if (params.is_reversed)
-        {
-            if (message->type == SSL_INPUT_STRING)
-                ft_printf("%s %s\n", message->output, message->input);
-            else if (message->type == SSL_INPUT_FILE)
-                ft_printf("%s %s\n", message->output, message->input);
-            else
-            {
-                if (params.should_read_stdin)
-                    ft_printf("%s(%s)= %s\n", algo_name, message->content,message->output);
-                else
-                    ft_printf("%s(%s)= %s\n", algo_name, message->input, message->output);
-            }
-        }
-        else
-        {
-            if (message->type == SSL_INPUT_STRING)
-                ft_printf("%s(%s)= %s\n", algo_name, message->input, message->output);
-            else if (message->type == SSL_INPUT_FILE)
-                ft_printf("%s(%s)= %s\n", algo_name, message->input, message->output);
-            else
-            {
-                if (params.should_read_stdin)
-                    ft_printf("%s(%s)= %s\n", algo_name, message->content,message->output);
-                else
-                    ft_printf("%s(%s)= %s\n", algo_name, message->input, message->output);
-            }
-        }
+        ft_putstr_fd(message->output, params.output_fd);
+        ft_putstr_fd("\n", params.output_fd);
     }
     return ;
 }

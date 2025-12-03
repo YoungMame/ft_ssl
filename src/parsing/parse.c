@@ -82,11 +82,32 @@ int parse(int argc, char **argv, t_ssl_command *command)
         }
         if (!is_flag_spotted)
         {
-            command->messages[command->message_count].input = ft_strdup(argv[i]);
-            if (!command->messages[command->message_count].input)
-                return (free_command(command), ft_printf("Error: malloc failed\n"), 0);
-            command->messages[command->message_count].type = SSL_INPUT_FILE;
-            command->message_count++;
+            if (algo.noflag_as_file && argv[i][0] != '-')
+            {
+                command->messages[command->message_count].input = ft_strdup(argv[i]);
+                if (!command->messages[command->message_count].input)
+                    return (free_command(command), ft_printf("Error: malloc failed\n"), 0);
+                command->messages[command->message_count].type = SSL_INPUT_FILE;
+                command->message_count++;
+            }
+            else
+            {
+                ft_printf("ft_ssl: Error: '%s' is an invalid option.\n", argv[i]);
+                for (int i = 0; i < algo.nb_options; i++)
+                {
+                    if (algo.options[i])
+                        ft_printf("%s ", algo.options[i]);
+                    if (algo.options_long[i])
+                        ft_printf("%s ", algo.options_long[i]);
+                    if (algo.args[i])
+                        ft_printf("%s ", algo.args[i]);
+                    if (algo.descriptions[i])
+                        ft_printf(": %s", algo.descriptions[i]);
+                    ft_printf("\n");
+                }
+                
+                return (free_command(command), 0);
+            }
         }
     }
     return (1);
