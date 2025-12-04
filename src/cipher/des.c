@@ -31,6 +31,44 @@
 //     printf("\n");
 // }
 
+// static char    *append_h(char *hash, uint32_t value)
+// {
+//     // Bit swap to big-endian becuase itoa swap bits order
+//     uint32_t o1, o2, o3, o4;
+//     o1 = (0xFF000000 & (value << 24));
+//     o2 = (0x00FF0000 & (value << 8));
+//     o3 = (0x0000FF00 & (value >> 8));
+//     o4 = (0x000000FF & (value >> 24));
+//     uint32_t little_endian_value = o1 | o2 | o3 | o4;
+//     char    *hex = ft_itoa_base_unsigned32(little_endian_value, "0123456789abcdef", 8);
+//     if (!hex)
+//         return (NULL);
+//     char    *str = ft_strjoin(hash, hex);
+//     free(hex);
+//     return str;
+// }
+
+// // Append each hash values that result in hexadecimal format
+// static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t h3)
+// {
+//     char *digest = malloc(257 * sizeof(char));
+//     if (!digest)
+//         return NULL;
+//     digest[0] = '\0';
+
+//     uint32_t values[4] = {h0, h1, h2, h3};
+//     for (int i = 0; i < 4; i++)
+//     {
+//         char *tmp = append_h(digest, values[i]);
+//         if (!digest)
+//             return (free(tmp), free(digest),NULL);
+//         free(digest);
+//         digest = tmp;
+
+//     }
+//     return (digest);
+// }
+
 static void des_permute_choice1(uint64_t input, uint32_t *left, uint32_t *right)
 {    
     *left = 0x0;
@@ -207,6 +245,50 @@ static uint64_t des_encrypt_block(uint64_t plaintext, uint64_t *subkeys)
     return plaintext;
 }
 
+static uint64_t *des_allocate_chunks(char *message, bool no_pad, int *chunk_count)
+{
+    int message_len = ft_strlen(message);
+
+    *chunk_count = message_len / 8;
+    if (message_len % 8 != 0)
+        (*chunk_count) += 1;
+    if (*chunk_count <= 0)
+        return (NULL);
+    uint64_t *chunks = ft_calloc(*chunk_count, sizeof(uint64_t));
+    if (!chunks)
+        return (ft_printf("ft_ssl: Error: Memory error\n"), NULL);
+
+    int j = 0;
+    uint8_t padding_diff = (u_int8_t)(no_pad ? 0x00 : 8 - (message_len % 8));
+    while (j < *chunk_count)
+    {
+        chunks[j] = 0x0;
+        for (int i = 0; i < 8; i++)
+        {
+            int index = j * 8 + i;
+            uint8_t byte = (index < message_len) ? (uint8_t)message[index] : padding_diff;
+            chunks[j] |= (uint64_t)byte << ((7 - i) * 8);
+        }
+        j++;
+    }
+
+    return (chunks);
+}
+
+static uint64_t *des_ebc(uint64_t *blocks, int block_count, uint64_t *subkeys)
+{
+    uint64_t *output = ft_calloc(block_count, sizeof(uint64_t));
+    if (!output)
+        return (NULL);
+
+    for (int i = 0; i < block_count; i++)
+    {
+        uint64_t ciphertext = des_encrypt_block(blocks[i], subkeys);
+        output[i] = ciphertext;
+    }
+    return (output);
+}
+
 // ============================================ PER BLOCK //
 
 int des(t_ssl_command *command)
@@ -217,14 +299,26 @@ int des(t_ssl_command *command)
         return (0);
 
     uint64_t key = 0x0123456789ABCDEF;
-    uint64_t plaintext = 0x0123456789ABCDEF;
     uint64_t *subkeys = des_key_schedule(key);
     if (!subkeys)
         return (0);
-    uint64_t ciphertext = des_encrypt_block(plaintext, subkeys);
-    // printf("val = 0x%" PRIx64 "\n", ciphertext);
-    // printf("expected = 0x%" PRIx64 "\n", expected);
+
+    int blocks_count;
+    uint64_t *blocks = des_allocate_chunks(command->messages[0].content, false, &blocks_count);
+    if (!blocks) return (free(subkeys), 0);
+
+    uint64_t *cipher = des_ebc(blocks, blocks_count, subkeys);
+    printf("DES Encrypted result:\n");
+    for (int i = 0; i < blocks_count; i++)
+    {
+        printf("x%016" PRIx64 "\n", cipher[i]);
+    }
+    printf("\n");
+    free(blocks);
     free(subkeys);
+    if (!cipher)
+        return (0);
+
     des_output_messages(command, params, "des");
      if (params.output_fd != STDOUT_FILENO)
         close(params.output_fd);
