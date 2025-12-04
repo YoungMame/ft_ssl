@@ -1,19 +1,51 @@
 # include "ft_ssl.h"
 # include "inttypes.h"
 
+// void pbin(uint64_t v)
+// {
+//     uint64_t mask = (uint64_t)1 << 63;
+//     while (mask) {
+//         printf("%d", (v & mask) ? 1 : 0);
+//         mask >>= 1;
+//     }
+//     printf("\n");
+// }
+
+// void pbin32(uint32_t v)
+// {
+//     uint32_t mask = (uint32_t)1 << 31;
+//     while (mask) {
+//         printf("%d", (v & mask) ? 1 : 0);
+//         mask >>= 1;
+//     }
+//     printf("\n");
+// }
+
+// void pbin8(uint8_t v)
+// {
+//     uint8_t mask = (uint8_t)1 << 7;
+//     while (mask) {
+//         printf("%d", (v & mask) ? 1 : 0);
+//         mask >>= 1;
+//     }
+//     printf("\n");
+// }
+
 static void des_permute_choice1(uint64_t input, uint32_t *left, uint32_t *right)
 {    
-    // left
+    *left = 0x0;
+    *right = 0x0;
     for (int i = 0; i < 28; i++)
     {
-        uint8_t permuted_bit = (input << (56 - DES_PC1_LEFT[i])) & 0x1;
-        *left = (*left << 1) | permuted_bit;
+        uint8_t pos = DES_PC1_LEFT[i];
+        uint8_t bit = (input >> (64 - pos)) & 0x1;
+        *left = (*left << 1) | bit;
     }
-    // right
     for (int i = 0; i < 28; i++)
     {
-        uint8_t permuted_bit = (input << (56 - DES_PC1_RIGHT[i])) & 0x1;
-        *right = (*right << 1) | permuted_bit;
+        uint8_t pos = DES_PC1_RIGHT[i];
+        uint8_t bit = (input >> (64 - pos)) & 0x1;
+        *right = (*right << 1) | bit;
     }
     return ;
 }
@@ -21,15 +53,14 @@ static void des_permute_choice1(uint64_t input, uint32_t *left, uint32_t *right)
 // output a 48 bits value
 static uint64_t des_permute_choice2(uint32_t left, uint32_t right)
 {
-    uint64_t output = 0x0;
-    // left
+    uint64_t combined = ((uint64_t)left << 28) | (uint64_t)right; // 56 bits
+    uint64_t output = 0;
     for (int i = 0; i < 48; i++)
     {
-        uint8_t pos = DES_PC2[i] ;
-        uint8_t permuted_bit = ((pos > 27 ? left : right) << (56 - pos)) & 0x1;
-        output = (output << 1) | permuted_bit;
+        uint8_t pos = DES_PC2[i];
+        uint8_t bit = (combined >> (56 - pos)) & 0x1;
+        output = (output << 1) | bit;
     }
-
     return output;
 }
 
@@ -39,6 +70,7 @@ static uint64_t* des_key_schedule(uint64_t key)
     uint32_t left = 0x0;
     uint32_t right = 0x0;
     des_permute_choice1(key, &left, &right);
+
 
     uint64_t *subkeys = ft_calloc(16, sizeof(uint64_t));
     if (!subkeys)
@@ -52,14 +84,19 @@ static uint64_t* des_key_schedule(uint64_t key)
         // Perform the left shifts
         left = ((left << shifts) | (left >> (28 - shifts))) & 0x0FFFFFFF;
         right = ((right << shifts) | (right >> (28 - shifts))) & 0x0FFFFFFF;
-
+        // printf("C %d: ", round + 1);
+        // pbin(left);
+        // printf("D %d: ", round + 1);
+        // pbin(right);
         // Add subkey to the array
         subkeys[round] = des_permute_choice2(left, right);
+        // printf("K %d: ", round + 1);
+        // pbin(subkeys[round]);
     }
     return subkeys;
 }
 
-// ======================================= SUBKEYS GENERATION //
+// ============================================ SUBKEYS GENERATION //
 
 // Expand 32 bits to 48 bits
 static uint64_t expansion_permutation(uint32_t half_block)
@@ -67,7 +104,7 @@ static uint64_t expansion_permutation(uint32_t half_block)
     uint64_t expanded = 0x0; // 48 bits
     for (int i = 0; i < 48; i++)
     {
-        uint8_t pos = DES_EBOX[i] ;
+        uint8_t pos = DES_EBOX[i];
         uint8_t bit = (half_block >> (32 - pos)) & 0x1;
         expanded = (expanded << 1) | bit;
     }
@@ -76,36 +113,25 @@ static uint64_t expansion_permutation(uint32_t half_block)
 
 static uint32_t keyed_substitution(uint64_t key)
 {
-    uint8_t split[8] = {}; // 48 bit key splitted in 4 bits values
+    uint32_t output = 0;
 
-    for (size_t i = 0; i < 8; i++)
+    for (int i = 0; i < 8; i++)
     {
-        // uint8_t six_bits_v = 0xFC & key;
-        uint8_t row = (0x84 & key) >> 2 | (0x01 & key);
-        uint8_t r_row = 0x0 | ((row << 1) & (row >> 1) >> 2) | ((row & 0x1) >> 7);
-        uint8_t col = 0x78 & key;
-        uint8_t r_col = (col >> 3) & 0x0F;
-        uint8_t f_bits_v = DES_SBOX[i][r_row][r_col];
-        split[i] = f_bits_v;
-        key = key << 6;
+        uint8_t six = (key >> (42 - 6 * i)) & 0x3F;
+        uint8_t row = ((six & 0x20) >> 4) | (six & 0x01);
+        uint8_t col = (six >> 1) & 0x0F;
+        uint8_t s = DES_SBOX[i][row][col] & 0x0F;
+        output = (output << 4) | s;
     }
-    
-    uint32_t output = 0x0; // 32 bits key
-    for (size_t i = 0; i < 8; i++)
-    {
-        // add every 4 bits value according to the 32 bits output
-        output = (output << 4) | split[i];
-    }
-
     return output;
 }
 
-static uint32_t permutation(u_int32_t key)
+static uint32_t permutation(uint32_t key)
 {
     uint32_t permuted = 0x0;
     for (int i = 0; i < 32; i++)
     {
-        uint8_t pos = DES_PBOX[i] ;
+        uint8_t pos = DES_PBOX[i];
         uint8_t bit = (key >> (32 - pos)) & 0x1;
         permuted = (permuted << 1) | bit;
     }
@@ -116,29 +142,28 @@ static uint32_t permutation(u_int32_t key)
 static uint32_t des_round_function(uint32_t *left, uint32_t *right, uint64_t subkey)
 {
     // store result
-    uint32_t result = *right;
+    uint32_t tmp = *right;
 
     // Function F
     uint64_t expanded = expansion_permutation(*right);
+    (void)subkey;
     expanded ^= subkey;
-    result = keyed_substitution(expanded);
-    result = permutation(result);
+    *right = keyed_substitution(expanded);
+    *right = permutation(*right);
 
-    // Swap left and right
-    uint32_t tmp = *right;
-    *right = *left ^ result;
+    *right = *left ^ *right;
     *left = tmp;
     return 0;
 }
 
-// ======================================= PER ROUND //
+// ============================================ PER ROUND //
 
 static uint64_t initial_permutation(uint64_t block)
 {
     uint64_t permuted = 0x0;
     for (int i = 0; i < 64; i++)
     {
-        uint8_t pos = DES_IP[i] ;
+        uint8_t pos = DES_IP[i];
         uint8_t bit = (block >> (64 - pos)) & 0x1;
         permuted = (permuted << 1) | bit;
     }
@@ -150,7 +175,7 @@ static uint64_t final_permutation(uint64_t block)
     uint64_t permuted = 0x0;
     for (int i = 0; i < 64; i++)
     {
-        uint8_t pos = DES_FP[i] ;
+        uint8_t pos = DES_FP[i];
         uint8_t bit = (block >> (64 - pos)) & 0x1;
         permuted = (permuted << 1) | bit;
     }
@@ -161,19 +186,28 @@ static uint64_t des_encrypt_block(uint64_t plaintext, uint64_t *subkeys)
 {
     plaintext = initial_permutation(plaintext);
 
-    uint32_t left = (plaintext >> 32) & 0xFFFFFFFF;
-    uint32_t right = plaintext & 0xFFFFFFFF;
+    uint32_t left = (uint32_t)(plaintext >> 32) | 0x0;
+    uint32_t right = (uint32_t)plaintext | 0x0;
+
     for (int round = 0; round < 16; round++)
     {
         des_round_function(&left, &right, subkeys[round]);
+        // printf("L%d: ", round + 1);
+        // pbin32(left);
+        // printf("R%d: ", round + 1);
+        // pbin32(right);
     }
     // 32 bits swap
     plaintext = ((uint64_t)right << 32) | left;
+    // printf("After swap: ");
+    // pbin(plaintext);
     plaintext = final_permutation(plaintext);
+    // printf("After FP: ");
+    // pbin(plaintext);
     return plaintext;
 }
 
-// ======================================= PER BLOCK //
+// ============================================ PER BLOCK //
 
 int des(t_ssl_command *command)
 {
@@ -182,15 +216,14 @@ int des(t_ssl_command *command)
     if (!success)
         return (0);
 
-    uint64_t key = 0x133457799BBCDFF1u;
-    uint64_t plaintext = 0x0123456789ABCDEFu;
-    uint64_t expected = 0x85E813540F0AB405u;
+    uint64_t key = 0x0123456789ABCDEF;
+    uint64_t plaintext = 0x0123456789ABCDEF;
     uint64_t *subkeys = des_key_schedule(key);
     if (!subkeys)
         return (0);
     uint64_t ciphertext = des_encrypt_block(plaintext, subkeys);
-    printf("val = 0x%" PRIx64 "\n", ciphertext);
-    printf("expected = 0x%" PRIx64 "\n", expected);
+    // printf("val = 0x%" PRIx64 "\n", ciphertext);
+    // printf("expected = 0x%" PRIx64 "\n", expected);
     free(subkeys);
     des_output_messages(command, params, "des");
      if (params.output_fd != STDOUT_FILENO)
