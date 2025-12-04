@@ -85,5 +85,15 @@ t_ssl_algo g_ssl_algos[SSL_MODE_COUNT] = {
         .args = base64_args,
         .descriptions = base64_descriptions,
         .noflag_as_file = false
-    }
+    },
+    {
+        .name = "des",
+        .f = des,
+        .nb_options = 4,
+        .options = base64_options,
+        .options_long = base64_options_long,
+        .args = base64_args,
+        .descriptions = base64_descriptions,
+        .noflag_as_file = false
+    },
 };

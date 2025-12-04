@@ -12,7 +12,7 @@
 # include "hash.h"
 # include "cipher.h"
 
-# define SSL_MODE_COUNT 6
+# define SSL_MODE_COUNT 7
 
 typedef enum ssl_input_type { 
     SSL_INPUT_FILE,
@@ -68,6 +68,12 @@ int sha256(t_ssl_command *command);
 
 // cipher/base64.c
 int base64(t_ssl_command *command);
+
+// cipher/base64.c
+int base64(t_ssl_command *command);
+
+// cipher/des.c
+int des(t_ssl_command *command);
 
 // parse.c
 int parse(int argc, char **argv, t_ssl_command *command);
