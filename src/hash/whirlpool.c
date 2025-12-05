@@ -158,7 +158,7 @@ static void key_expension(uint8_t origin[64], int round) {
 //     }
 // }
 
-static char *whirlpool_hashing(char *message) {
+static char *whirlpool_hashing(char *message, size_t message_len) {
     char *preproc_message;
     size_t total_len;
     uint8_t H[64];
@@ -168,7 +168,7 @@ static char *whirlpool_hashing(char *message) {
 
     // Preprocess the message in a char array where each byte is an element of the array
     // Whirlpool : longueur sur 256 bits (32 octets), big-endian
-    preproc_message = get_preprocessed_message_whirlpool(message, &total_len);
+    preproc_message = get_preprocessed_message_whirlpool(message, message_len, &total_len);
     if (!preproc_message)
         return (NULL);
 
@@ -225,7 +225,7 @@ int whirlpool(t_ssl_command *command) {
 
     for (size_t i = 0; i < command->message_count; i++)
     {
-        char    *output = whirlpool_hashing(command->messages[i].content);
+        char    *output = whirlpool_hashing(command->messages[i].content, command->messages[i].content_size);
         if (!output)
             return (0);
         command->messages[i].output = output;

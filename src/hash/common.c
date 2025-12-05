@@ -109,6 +109,7 @@ int             hash_process_command_inputs(t_ssl_command *command, t_hash_param
             message->content = ft_strdup(message->input);
             if (!message->content)
                 return (ft_printf("Error: malloc failed\n"), 0);
+            message->content_size = ft_strlen(message->content);
         }
     }
     return (1);

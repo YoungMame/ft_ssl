@@ -1,6 +1,6 @@
 # include "../include/ft_ssl.h"
 
-static char *mem_join(char *s1, size_t len1, char *s2, size_t len2)
+char *mem_join(char *s1, size_t len1, char *s2, size_t len2)
 {
     char *result;
 

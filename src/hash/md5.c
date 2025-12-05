@@ -57,7 +57,7 @@ static uint32_t* md5_init_K() {
 // Break message into 512-bit chunks
 // Break each chunk into sixteen 32-bit words
 // Use four words (A, B, C, D) to compute the message digest and set to initial constant values
-static char *md5_hashing(char *message) {
+static char *md5_hashing(char *message, size_t message_len) {
     char *preproc_message;
     uint32_t *K;
     size_t total_len;
@@ -67,7 +67,7 @@ static char *md5_hashing(char *message) {
         return (NULL);
 
     // Preprocess the message in a char array where each byte is an element of the array
-    preproc_message = get_preprocessed_message(message, &total_len, false);
+    preproc_message = get_preprocessed_message(message, message_len, &total_len, false);
 
     // Break the message into 512-bit chunks (each chunk is 64 bytes)
     size_t chunks_count = total_len / 64;
@@ -192,7 +192,7 @@ int md5(t_ssl_command *command) {
 
     for (size_t i = 0; i < command->message_count; i++)
     {
-        char    *output = md5_hashing(command->messages[i].content);
+        char    *output = md5_hashing(command->messages[i].content, command->messages[i].content_size);
         if (!output)
             return (0);
         command->messages[i].output = output;

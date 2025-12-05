@@ -96,7 +96,7 @@ static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t
 // Using the preprocessed message, process it in 512-bit chunks
 // Break message into 512-bit chunks
 // Break each chunk into sixteen 32-bit words
-static char *sha256_hashing(char *message) {
+static char *sha256_hashing(char *message, size_t message_len) {
     char *preproc_message;
     size_t total_len;
     uint32_t *K;
@@ -106,7 +106,7 @@ static char *sha256_hashing(char *message) {
         return (NULL);
 
     // Preprocess the message in a char array where each byte is an element of the array
-    preproc_message = get_preprocessed_message(message, &total_len, true);
+    preproc_message = get_preprocessed_message(message, message_len, &total_len, true);
 
     // Break the message into 512-bit chunks (each chunk is 64 bytes)
     size_t chunks_count = total_len / 64;
@@ -243,7 +243,7 @@ int sha256(t_ssl_command *command) {
 
     for (size_t i = 0; i < command->message_count; i++)
     {
-        char    *output = sha256_hashing(command->messages[i].content);
+        char    *output = sha256_hashing(command->messages[i].content, command->messages[i].content_size);
         if (!output)
             return (0);
         command->messages[i].output = output;

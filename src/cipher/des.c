@@ -247,10 +247,8 @@ static uint64_t des_encrypt_block(uint64_t plaintext, uint64_t *subkeys, bool de
     return plaintext;
 }
 
-static uint64_t *des_allocate_chunks(char *message, bool no_pad, int *chunk_count)
+static uint64_t *des_allocate_chunks(char *message, bool no_pad, int *chunk_count, size_t message_len)
 {
-    int message_len = ft_strlen(message);
-
     *chunk_count = message_len / 8;
     if (message_len % 8 != 0)
         (*chunk_count) += 1;
@@ -268,7 +266,7 @@ static uint64_t *des_allocate_chunks(char *message, bool no_pad, int *chunk_coun
         for (int i = 0; i < 8; i++)
         {
             int index = j * 8 + i;
-            uint8_t byte = (index < message_len) ? (uint8_t)message[index] : padding_diff;
+            uint8_t byte = (index < (int)message_len) ? (uint8_t)message[index] : padding_diff;
             chunks[j] |= (uint64_t)byte << ((7 - i) * 8);
         }
         j++;
@@ -300,16 +298,28 @@ int des(t_ssl_command *command)
     if (!success)
         return (0);
 
-    if (command->message_count == 0 || !command->messages[0].content || ft_strlen(command->messages[0].content) == 0)
-        return (ft_printf("ft_ssl: des: Error: No input provided\n"), 0);
-
-    uint64_t key = 0x0123456789ABCDEF;
+    if (command->message_count == 0 || !command->messages[0].content || command->messages[0].content_size == 0)
+        return (ft_printf("ft_ssl: Error: No input provided\n"), 0);
+    
+    uint64_t key = 0;
+    if (params.key)
+        key = ft_atoi_base64(params.key, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+    else
+    {
+        if (!params.password)
+            return (ft_printf("ft_ssl: Error: No key or password provided\n"), 0);
+        // char *generated_key = pbkfd2(params.password, params.salt, 1000, 8);
+        // if (!generated_key)
+        //     return (0);
+        // params.key = generated_key;
+    };
+    printf("ft_atoi_base64(%s):0x%" PRIx64"\n", command->messages[0].content, key);
     uint64_t *subkeys = des_key_schedule(key);
     if (!subkeys)
         return (0);
 
     int blocks_count;
-    uint64_t *blocks = des_allocate_chunks(command->messages[0].content, false, &blocks_count);
+    uint64_t *blocks = des_allocate_chunks(command->messages[0].content, false, &blocks_count, command->messages[0].content_size);
     if (!blocks) return (free(subkeys), 0);
 
     uint64_t    *cipher = des_ecb(blocks, blocks_count, subkeys, params.decode);

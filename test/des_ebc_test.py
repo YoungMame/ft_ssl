@@ -2,8 +2,8 @@ import subprocess
 
 test_array = [
     {
-        "cmd1": "echo -n \"Hello world\" | ./ft_ssl des-ecb -k 0123456789ABCDEF",
-        "cmd2": "echo -n \"Hello world\" | openssl enc -des-ecb -K 0123456789ABCDEF -nopad"
+        "cmd1": "echo -n \"Hello world\" | ./ft_ssl des-ecb -k 0123456789ABCDEF | hexdump",
+        "cmd2": "echo -n \"Hello world\" | openssl enc -des-ecb -K 0123456789ABCDEF -nopad | hexdump"
     },
     {
         "cmd1": "echo -n \"Lorem ipsssssssssssssssssssssssssssuuuuuuuuuuuuuum\" | ./ft_ssl des-ecb -k 0123456789ABCDEF",

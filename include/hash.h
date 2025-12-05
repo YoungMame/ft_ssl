@@ -30,8 +30,8 @@ void    free_chunk_height(uint8_t **M, size_t chunk_count);
 int *generate_primes(int len);
 
 // hash/preprocess.c
-char *get_preprocessed_message(char *message, size_t *total_len, bool is_size_big_endian);
-char *get_preprocessed_message_whirlpool(char *message, size_t *total_len);
+char *get_preprocessed_message(char *message, size_t message_len, size_t *total_len, bool is_size_big_endian);
+char *get_preprocessed_message_whirlpool(char *message, size_t message_len, size_t *total_len);
 
 // MD5 CONSTANTS
 # define MD5_CHUNK_SIZE 512

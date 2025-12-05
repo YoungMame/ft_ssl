@@ -16,13 +16,11 @@ static int get_padding_len(size_t message_len, size_t size_bytes)
 }
 
 // Padding + longueur sur 8 octets (MD5/SHA)
-char *get_preprocessed_message(char *message, size_t *total_len, bool is_size_big_endian)
+char *get_preprocessed_message(char *message, size_t message_len, size_t *total_len, bool is_size_big_endian)
 {
     int padding_len;
-    size_t message_len;
     char *padded_message;
 
-    message_len = ft_strlen(message);
     padding_len = get_padding_len(message_len, 8);
     *total_len = message_len + 1 + (padding_len / 8) + 8;
 
@@ -46,13 +44,11 @@ char *get_preprocessed_message(char *message, size_t *total_len, bool is_size_bi
     return (padded_message);
 }
 
-char *get_preprocessed_message_whirlpool(char *message, size_t *total_len)
+char *get_preprocessed_message_whirlpool(char *message, size_t message_len, size_t *total_len)
 {
     int padding_len;
-    size_t message_len;
     char *padded_message;
 
-    message_len = ft_strlen(message);
     padding_len = get_padding_len(message_len, 32);
     *total_len = message_len + 1 + (padding_len / 8) + 32;
 

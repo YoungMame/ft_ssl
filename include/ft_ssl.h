@@ -92,3 +92,5 @@ void    free_command(t_ssl_command *command);
 // utils
 
 char    *read_fd(int fd, size_t *out_size);
+
+char *mem_join(char *s1, size_t len1, char *s2, size_t len2);
