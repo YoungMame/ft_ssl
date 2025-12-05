@@ -22,6 +22,22 @@ static const char *base64_descriptions[] = {
     NULL
 };
 
+static const char *des_options[] = { "-a", "-d", "-e", "-i", "-o", "-k", "-p", "-s", "-v", NULL };
+static const char *des_options_long[] = { NULL, "--decode", "--encode", "--input", "--output", "--key", "--password", "--salt", "--initialization-vector", NULL };
+static const char *des_args[] = { NULL, NULL, NULL, "<file>", "<file>", "<key>", "<password>", "<salt>", "<iv>", NULL };
+static const char *des_descriptions[] = {
+    "decode/encode the input/output in base64, depending on the encrypt mode",
+    "decrypt mode",
+    "encrypt mode (default)",
+    "input file for message",
+    "output file for message",
+    "key in hex is the next argument",
+    "the password in ASCII is the next argument",
+    "the salt in hex is the next argument",
+    "initialization vector in hex is the next argument",
+    NULL
+};
+
 static const char *empty_array[] = {};
 
 /* definition for the extern in the header — must be file-scope (not inside a function) */
@@ -89,11 +105,21 @@ t_ssl_algo g_ssl_algos[SSL_MODE_COUNT] = {
     {
         .name = "des",
         .f = des,
-        .nb_options = 4,
-        .options = base64_options,
-        .options_long = base64_options_long,
-        .args = base64_args,
-        .descriptions = base64_descriptions,
+        .nb_options = 10,
+        .options = des_options,
+        .options_long = des_options_long,
+        .args = des_args,
+        .descriptions = des_descriptions,
+        .noflag_as_file = false
+    },
+    {
+        .name = "des-ecb",
+        .f = des,
+        .nb_options = 10,
+        .options = des_options,
+        .options_long = des_options_long,
+        .args = des_args,
+        .descriptions = des_descriptions,
         .noflag_as_file = false
     },
 };

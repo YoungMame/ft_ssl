@@ -7,7 +7,7 @@ int             base64_process_command_inputs(t_ssl_command *command)
 
         command->messages[command->message_count].input = ft_strdup("stdin");
         command->messages[command->message_count].type = SSL_INPUT_STDIN;
-        command->messages[command->message_count].content = read_fd(STDIN_FILENO);
+        command->messages[command->message_count].content = read_fd(STDIN_FILENO, &command->messages[command->message_count].content_size);
         command->message_count += 1;
         if (!command->messages[0].content)
             return (ft_printf("ft_ssl: Error: cannot read\n"), 0);
@@ -17,7 +17,7 @@ int             base64_process_command_inputs(t_ssl_command *command)
         int fd = open(command->messages[0].input, O_RDONLY);
         if (fd < 0)
             return (ft_printf("ft_ssl: %s: No such file or directory\n", command->messages[0].input), 0);
-        command->messages[0].content = read_fd(fd);
+        command->messages[0].content = read_fd(fd, &command->messages[0].content_size);
         close(fd);
         if (!command->messages[0].content)
             return (ft_printf("ft_ssl: Error: cannot read\n"), 0);
@@ -46,7 +46,6 @@ t_base64_params   base64_process_command_flags(t_ssl_command *command)
         }
         else if (command->flags[i].index == 3)
         {
-            printf("flag output file: %s\n", command->flags[i].value);
             params.output_fd = open(command->flags[i].value, O_WRONLY | O_CREAT | O_TRUNC, 0644);
             if (params.output_fd < 0)
                 return (ft_printf("ft_ssl: Error: %s: Cannot open output file\n", command->flags[i].value), params);
@@ -75,7 +74,7 @@ int             des_process_command_inputs(t_ssl_command *command)
 
         command->messages[command->message_count].input = ft_strdup("stdin");
         command->messages[command->message_count].type = SSL_INPUT_STDIN;
-        command->messages[command->message_count].content = read_fd(STDIN_FILENO);
+        command->messages[command->message_count].content = read_fd(STDIN_FILENO, &command->messages[command->message_count].content_size);
         command->message_count += 1;
         if (!command->messages[0].content)
             return (ft_printf("ft_ssl: Error: cannot read\n"), 0);
@@ -85,7 +84,7 @@ int             des_process_command_inputs(t_ssl_command *command)
         int fd = open(command->messages[0].input, O_RDONLY);
         if (fd < 0)
             return (ft_printf("ft_ssl: %s: No such file or directory\n", command->messages[0].input), 0);
-        command->messages[0].content = read_fd(fd);
+        command->messages[0].content = read_fd(fd, &command->messages[0].content_size);
         close(fd);
         if (!command->messages[0].content)
             return (ft_printf("ft_ssl: Error: cannot read\n"), 0);
@@ -103,22 +102,31 @@ t_des_params   des_process_command_flags(t_ssl_command *command)
     for (int i = 0; i < command->flag_count; i++)
     {
         if (command->flags[i].index == 0)
-            params.decode = true;
+            params.process_in_base64 = true;
         else if (command->flags[i].index == 1)
+            params.decode = true;
+        else if (command->flags[i].index == 2)
             params.decode = false;
-        else if (command->flags[i].index == 2 && command->flags[i].value && command->message_count == 0)
+        else if (command->flags[i].index == 3 && command->flags[i].value && command->message_count == 0)
         {
             command->messages[command->message_count].input = ft_strdup(command->flags[i].value);
             command->messages[command->message_count].type = SSL_INPUT_FILE;
             command->message_count += 1;
         }
-        else if (command->flags[i].index == 3)
+        else if (command->flags[i].index == 4)
         {
-            printf("flag output file: %s\n", command->flags[i].value);
             params.output_fd = open(command->flags[i].value, O_WRONLY | O_CREAT | O_TRUNC, 0644);
             if (params.output_fd < 0)
                 return (ft_printf("ft_ssl: Error: %s: Cannot open output file\n", command->flags[i].value), params);
         }
+        else if (command->flags[i].index == 5)
+            params.key = command->flags[i].value;
+        else if (command->flags[i].index == 6)
+            params.password = command->flags[i].value;
+        else if (command->flags[i].index == 7)
+            params.salt = command->flags[i].value;
+        else if (command->flags[i].index == 8)
+            params.iv = command->flags[i].value;
     }
     return (params);
 }

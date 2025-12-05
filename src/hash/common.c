@@ -90,7 +90,7 @@ int             hash_process_command_inputs(t_ssl_command *command, t_hash_param
 
         if (message->type == SSL_INPUT_STDIN)
         {
-            message->content = read_fd(STDIN_FILENO);
+            message->content = read_fd(STDIN_FILENO, &message->content_size);
             if (!message->content)
                 return (ft_printf("Error: cannot read\n"), 0);
         }
@@ -99,7 +99,7 @@ int             hash_process_command_inputs(t_ssl_command *command, t_hash_param
             int fd = open(message->input, O_RDONLY);
             if (fd < 0)
                 return (ft_printf("ft_ssl: %s: No such file or directory\n", message->input), 0);
-            message->content = read_fd(fd);
+            message->content = read_fd(fd, &message->content_size);
             close(fd);
             if (!message->content)
                 return (ft_printf("Error: cannot read\n"), 0);

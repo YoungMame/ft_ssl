@@ -3,8 +3,13 @@
 static const char *base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static char *malloc_buffer(size_t input_length) {
-    size_t bytes_groups_count = input_length / 3 + (input_length % 3 != 0);
-    char *result = ft_calloc(bytes_groups_count * 4 + 1, sizeof(char));
+    /* number of base64 chars = 4 * ceil(input_length / 3) */
+    size_t groups = (input_length + 2) / 3;
+    size_t base64_chars_count = groups * 4;
+    /* newlines every 64 chars (after encoding), so reserve space for them */
+    size_t newline_count = base64_chars_count / 64;
+    /* allocate base64 chars + newlines + terminating null */
+    char *result = ft_calloc(base64_chars_count + newline_count + 1, sizeof(char));
     return result;
 }
 
@@ -22,8 +27,7 @@ static int get_base64_index(char c) {
     return (-1);
 }
 
-static char *base64_decode(const char *input) {
-    size_t input_len = strlen(input);
+static char *base64_decode(const char *input, size_t input_len, size_t *out_size) {
     char *result = malloc_decode_buffer(input_len);
     if (!result)
         return ft_printf("ft_ssl: Error: Memory error\n"), NULL;
@@ -66,11 +70,11 @@ static char *base64_decode(const char *input) {
         }
     }
 
+    *out_size = byte_index;
     return result;
 }
 
-static char *base64_encode(const char *input) {
-    size_t input_len = strlen(input);
+static char *base64_encode(const char *input, const size_t input_len, size_t *out_size) {
     char *result = malloc_buffer(input_len);
     if (!result)
         return ft_printf("ft_ssl: Error: Memory error\n"), NULL;
@@ -128,6 +132,7 @@ static char *base64_encode(const char *input) {
         byte_index--;
 
     result[byte_index] = '\0';
+    *out_size = byte_index;
     return result;
 }
 
@@ -140,14 +145,14 @@ int base64(t_ssl_command *command)
 
     if (params.decode)
     {
-        char    *output = base64_decode(command->messages[0].content);
+        char    *output = base64_decode(command->messages[0].content, command->messages[0].content_size, &command->messages[0].output_size);
         if (!output)
             return (0);
         command->messages[0].output = output;
     }
     else
     {
-        char    *output = base64_encode(command->messages[0].content);
+        char    *output = base64_encode(command->messages[0].content, command->messages[0].content_size, &command->messages[0].output_size);
         if (!output)
             return (0);
         command->messages[0].output = output;

@@ -12,7 +12,7 @@
 # include "hash.h"
 # include "cipher.h"
 
-# define SSL_MODE_COUNT 7
+# define SSL_MODE_COUNT 8
 
 typedef enum ssl_input_type { 
     SSL_INPUT_FILE,
@@ -24,6 +24,8 @@ typedef struct  s_ssl_message {
     char                *input;
     char                *content;
     char                *output;
+    size_t              content_size;
+    size_t              output_size;
     t_ssl_input_type    type;
 } t_ssl_message;
 
@@ -89,4 +91,4 @@ void    free_command(t_ssl_command *command);
 
 // utils
 
-char    *read_fd(int fd);
+char    *read_fd(int fd, size_t *out_size);

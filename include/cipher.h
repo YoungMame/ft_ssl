@@ -6,8 +6,13 @@ typedef struct s_base64_params {
 }   t_base64_params;
 
 typedef struct s_des_params {
+    bool    process_in_base64;
     bool    decode;
     int     output_fd;
+    char    *key;
+    char    *password;
+    char    *salt;
+    char    *iv;
 }   t_des_params;
 
 typedef struct s_ssl_command t_ssl_command;
