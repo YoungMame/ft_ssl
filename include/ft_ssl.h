@@ -68,6 +68,9 @@ int md5(t_ssl_command *command);
 // hash/sha256.c
 int sha256(t_ssl_command *command);
 
+// Not static for hmac purposes
+char *sha256_hashing(char *message, size_t message_len);
+
 // cipher/base64.c
 int base64(t_ssl_command *command);
 

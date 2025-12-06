@@ -96,7 +96,7 @@ static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t
 // Using the preprocessed message, process it in 512-bit chunks
 // Break message into 512-bit chunks
 // Break each chunk into sixteen 32-bit words
-static char *sha256_hashing(char *message, size_t message_len) {
+char *sha256_hashing(char *message, size_t message_len) {
     char *preproc_message;
     size_t total_len;
     uint32_t *K;
