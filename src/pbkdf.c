@@ -84,9 +84,67 @@ char *hmac_hash256(const char *message, const char *key, const size_t message_le
         return (ft_printf("ft_ssl: Error: Memory error\n"), free(k), free(inner_key), free(outer_key), free(inner_message), free(inner_hash), free(outer_message), NULL);
 }
 
+static uint8_t **init_blocks(size_t block_size, size_t count)
+{
+    uint8_t **blocks = ft_calloc(count, sizeof(uint8_t *));
+    if (!blocks)
+        return NULL;
+    for (size_t i = 0; i < count; i++)
+    {
+        blocks[i] = ft_calloc(block_size, sizeof(uint8_t));
+        if (!blocks[i])
+        {
+            for (size_t j = 0; j < i; j++)
+                free(blocks[j]);
+            free(blocks);
+            return NULL;
+        }
+    }
+    return blocks;
+}
+
+static void free_blocks(uint8_t **blocks)
+{
+    if (!blocks)
+        return;
+    for (size_t i = 0; blocks[i] != NULL; i++)
+        free(blocks[i]);
+    free(blocks);
+}
+
 // Return a derived key of length 8 bytes (64 bits)
+// iterations is the expected output len in bytes
 char *pbkdf2_8(const char *password, const char *salt, t_pbkdf2_prf hash_func, int iterations)
 {
+    size_t count = (iterations + 7) / 8; // number of 8-byte blocks needed
+    uint8_t **T = init_blocks(8, count);
+    if (!T)
+        return (ft_printf("ft_ssl: Error: Memory error\n"), NULL);
+
+    int salt_len = ft_strlen(salt);
+    int password_len = ft_strlen(password);
+
+    // concat salt and iterations on int32
+    // for each block
+    uint8_t int_block[4];
+    for (size_t i = 0; i < count; i++)
+    {
+        int_block[0] = (uint8_t)((iterations) >> 24);
+        int_block[1] = (uint8_t)((iterations) >> 16);
+        int_block[2] = (uint8_t)((iterations) >> 8);
+        int_block[3] = (uint8_t)(iterations);
+    }
+
+    char *concatened_salt = mem_join(salt, salt_len, (char *)int_block, 4);
+    if (!concatened_salt)
+        return (ft_printf("ft_ssl: Error: Memory error\n"), free_blocks(T), NULL);
+
+
+    uint8_t *firstT = hash_func(password, password_len, concatened_salt , salt_len + 4);
+    free(concatened_salt);
+    if (!firstT)
+        return (ft_printf("ft_ssl: Error: Memory error\n"), free_blocks(T), NULL);
+
     // hmac_hash256(password, salt, ft_strlen(password), ft_strlen(salt));
     return ft_strdup("derived_key_placeholder");
 }
