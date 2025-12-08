@@ -112,38 +112,77 @@ static void free_blocks(uint8_t **blocks)
     free(blocks);
 }
 
+static uint8_t *xor_blocks(uint8_t *src1, uint8_t *src2, size_t len)
+{
+    uint8_t *dest = ft_calloc(len, sizeof(uint8_t));
+    if (!dest)
+        return NULL;
+    for (size_t i = 0; i < len; i++)
+    {
+        dest[i] = src1[i] ^ src2[i];
+    }
+    return dest;
+}
+
+// Per block function
+uint32_t pbkdf2_f4(uint32_t **t, int block_size, int block_count, int iterations, t_pbkdf2_prf hash_func)
+{
+    for (int i = 1; i <= iterations; i++)
+    {
+        // t[i] = t[i] XOR hmac_hash256(password, t[i-1])
+        char *prev_block = (char *)t[i];
+        char *hmac_result = hash_func((char *)prev_block, (char *)t[i], block_size, block_size);
+        if (!hmac_result)
+            return (ft_printf("ft_ssl: Error: Memory error\n"), -1);
+        uint8_t *xor_result = xor_blocks((uint8_t *)t[i], (uint8_t *)hmac_result, block_size);
+        free(hmac_result);
+        if (!xor_result)
+            return (ft_printf("ft_ssl: Error: Memory error\n"), -1);
+        ft_memcpy(t[i], xor_result, block_size);
+        free(xor_result);
+    }
+    return 0;
+}
+
 // Return a derived key of length 8 bytes (64 bits)
 // iterations is the expected output len in bytes
-char *pbkdf2_8(const char *password, const char *salt, t_pbkdf2_prf hash_func, int iterations)
+// hlen is the number of bytes the hash function outputs
+char *pbkdf2_8(const char *password, const char *salt, t_pbkdf2_prf hash_func, int iterations, size_t hlen)
 {
-    size_t count = (iterations + 7) / 8; // number of 8-byte blocks needed
-    uint8_t **T = init_blocks(8, count);
-    if (!T)
+    int password_len = ft_strlen(password);
+    int salt_len = ft_strlen(salt);
+    int chunk_count = (8 + hlen - 1) / hlen; //
+    char *result = NULL;
+
+    uint8_t **t = init_blocks(hlen, chunk_count);
+    if (!t)
         return (ft_printf("ft_ssl: Error: Memory error\n"), NULL);
 
-    int salt_len = ft_strlen(salt);
-    int password_len = ft_strlen(password);
-
-    // concat salt and iterations on int32
-    // for each block
-    uint8_t int_block[4];
-    for (size_t i = 0; i < count; i++)
+    for (int i = 0; i < chunk_count; i++)
     {
-        int_block[0] = (uint8_t)((iterations) >> 24);
-        int_block[1] = (uint8_t)((iterations) >> 16);
-        int_block[2] = (uint8_t)((iterations) >> 8);
-        int_block[3] = (uint8_t)(iterations);
+        uint32_t block_index_be = __builtin_bswap32((uint32_t)i);
+        char *concatened_salt = mem_join(salt, salt_len, (void*)&block_index_be, 4);
+        if (!concatened_salt)
+            return (ft_printf("ft_ssl: Error: Memory error\n"), free_blocks(t), NULL);
+
+        uint8_t *first_iteration = hash_func(password, password_len, concatened_salt , salt_len + 4);
+        free(concatened_salt);
+        if (!first_iteration)
+            return (NULL);
+
+        ft_memcpy(t[i], first_iteration, hlen);
+        free(first_iteration);
+        pbkdf2_f4(t, hlen, chunk_count, iterations, hash_func);
     }
 
-    char *concatened_salt = mem_join(salt, salt_len, (char *)int_block, 4);
-    if (!concatened_salt)
-        return (ft_printf("ft_ssl: Error: Memory error\n"), free_blocks(T), NULL);
-
-
-    uint8_t *firstT = hash_func(password, password_len, concatened_salt , salt_len + 4);
-    free(concatened_salt);
-    if (!firstT)
-        return (ft_printf("ft_ssl: Error: Memory error\n"), free_blocks(T), NULL);
+    for (int i = 0; i < chunk_count; i++)
+    {
+        char *new_result = mem_join(result, i * hlen, (char *)t[i], hlen);
+        if (!new_result)
+            return (ft_printf("ft_ssl: Error: Memory error\n"), free_blocks(t), free(result), NULL);
+        free(result);
+        result = new_result;
+    }
 
     // hmac_hash256(password, salt, ft_strlen(password), ft_strlen(salt));
     return ft_strdup("derived_key_placeholder");
