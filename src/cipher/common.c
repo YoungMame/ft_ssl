@@ -98,6 +98,10 @@ t_des_params   des_process_command_flags(t_ssl_command *command)
 
     params.decode = false;
     params.output_fd = STDOUT_FILENO;
+    params.key = NULL;
+    params.password = NULL;
+    params.salt = NULL;
+    params.iv = NULL;
 
     for (int i = 0; i < command->flag_count; i++)
     {

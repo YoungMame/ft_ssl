@@ -1,53 +1,33 @@
 # include "ft_ssl.h"
 
-typedef char *(*t_pbkdf2_prf)(char *, size_t, char *, size_t);
-
-static char *generate_ipad(size_t len) {
-    char *ipad = ft_calloc(len, sizeof(char));
-    if (!ipad)
-        return NULL;
-    for (size_t i = 0; i < len; i++)
-        ipad[i] = 0x36;
-    return ipad;
-}
-
-static unsigned char *generate_opad(size_t len) {
-    unsigned char *opad = ft_calloc(len, sizeof(char));
-    if (!opad)
-        return NULL;
-    for (size_t i = 0; i < len; i++)
-        opad[i] = 0x5c;
-    return opad;
-}
-
-static void *mem_join(const void *ptr1, size_t len1, const void *ptr2, size_t len2) {
-    void *new_mem = ft_calloc(len1 + len2, sizeof(char));
-    if (!new_mem)
-        return NULL;
-    ft_memcpy(new_mem, ptr1, len1);
-    ft_memcpy((char *)new_mem + len1, ptr2, len2);
-    return new_mem;
-}
-
 #define SHA256_BLOCK_SIZE 64
 #define SHA256_DIGEST_LEN 32
 
-// HMAC = h ( (K ^ opad) ∥ h( (K ^ ipad) ∥ message ) )
-char *hmac_hash256(const char *message, const char *key, const size_t message_len, const size_t key_len)
+// Wrapper pour adapter hmac_hash256 au type t_pbkdf2_prf
+// t_pbkdf2_prf attend (key, key_len, message, message_len)
+// hmac_hash256 prend (message, message_len, key, key_len)
+char *hmac_sha256_prf(char *key, size_t key_len, char *message, size_t message_len)
 {
-    char ipad[SHA256_BLOCK_SIZE];
-    char opad[SHA256_BLOCK_SIZE];
-    char *h = NULL;
+    return hmac_hash256(message, key, message_len, key_len);
+}
+
+// HMAC = h ( (K ^ opad) ∥ h( (K ^ ipad) ∥ message ) )
+char *hmac_hash256(const char *message, const char *key, const size_t message_len, size_t key_len)
+{
+    char ipad[SHA256_BLOCK_SIZE] = {0};
+    char opad[SHA256_BLOCK_SIZE] = {0};
+    char k0[SHA256_BLOCK_SIZE] = {0};
+    // char *h = NULL;
     char *k = NULL;
 
+    // generate ipad and opad
     for (size_t i = 0; i < SHA256_BLOCK_SIZE; i++) {
         ipad[i] = k0[i] ^ 0x36;
         opad[i] = k0[i] ^ 0x5c;
     }
 
-    size_t new_key_len = SHA256_BLOCK_SIZE;
     if (ft_strlen(key) > SHA256_BLOCK_SIZE) {
-        k = sha256_hashing(key, key_len); // returns 32 bytes
+        k = sha256_hashing((char *)key, key_len); // returns 32 bytes
         key_len = SHA256_DIGEST_LEN; // <--- correction minimale
     }
     else
@@ -66,7 +46,7 @@ char *hmac_hash256(const char *message, const char *key, const size_t message_le
         inner_key[i] = k[i] ^ ipad[i];
         outer_key[i] = k[i] ^ opad[i];
     }
-    char *inner_message = mem_join(inner_key, SHA256_BLOCK_SIZE, message, message_len);
+    char *inner_message = mem_join(inner_key, SHA256_BLOCK_SIZE, (char *)message, message_len);
     if (!inner_message)
         return (ft_printf("ft_ssl: Error: Memory error\n"), free(k), free(inner_key), free(outer_key), NULL);
 
@@ -137,20 +117,25 @@ static uint8_t *xor_blocks(uint8_t *src1, uint8_t *src2, size_t len)
 }
 
 // Per block function
-uint32_t pbkdf2_f4(uint32_t **t, int block_size, int block_count, int iterations, t_pbkdf2_prf hash_func)
+static uint32_t pbkdf2_f4(const char *password, int password_len, uint8_t **t, int block_index, int block_size, int iterations, t_pbkdf2_prf hash_func)
 {
-    for (int i = 1; i <= iterations; i++)
+    // t[0] = HMAC(password, salt || INT_32_BE(i))
+    // Déjà fait avant l'appel
+    
+    for (int i = 1; i < iterations; i++)  // Commence à 1, pas 0
     {
-        // t[i] = t[i] XOR hmac_hash256(password, t[i-1])
-        char *prev_block = (char *)t[i];
-        char *hmac_result = hash_func((char *)prev_block, block_size, (char *)t[i], block_size);
+        // U_i = HMAC(password, U_{i-1})
+        char *hmac_result = hash_func((char *)password, password_len, (char *)t[block_index], block_size);
         if (!hmac_result)
-            return (ft_printf("ft_ssl: Error: Memory error\n"), -1);
-        uint8_t *xor_result = xor_blocks((uint8_t *)t[i], (uint8_t *)hmac_result, block_size);
+            return -1;
+            
+        uint8_t *xor_result = xor_blocks(t[block_index], (uint8_t *)hmac_result, block_size);
         free(hmac_result);
         if (!xor_result)
-            return (ft_printf("ft_ssl: Error: Memory error\n"), -1);
-        ft_memcpy(t[i], xor_result, block_size);
+            return -1;
+            
+        // Stocker U_i temporairement puis mettre à jour le résultat XOR cumulé
+        ft_memcpy(t[block_index], xor_result, block_size);
         free(xor_result);
     }
     return 0;
@@ -170,21 +155,21 @@ char *pbkdf2_8(const char *password, const char *salt, t_pbkdf2_prf hash_func, i
     if (!t)
         return (ft_printf("ft_ssl: Error: Memory error\n"), NULL);
 
-    for (int i = 0; i < chunk_count; i++)
+    for (int i = 1; i < chunk_count; i++)
     {
         uint32_t block_index_be = __builtin_bswap32((uint32_t)i);
-        char *concatened_salt = mem_join(salt, salt_len, (void*)&block_index_be, 4);
+        char *concatened_salt = mem_join((char *)salt, salt_len, (void*)&block_index_be, 4);
         if (!concatened_salt)
             return (ft_printf("ft_ssl: Error: Memory error\n"), free_blocks(t), NULL);
 
-        uint8_t *first_iteration = hash_func(password, password_len, concatened_salt , salt_len + 4);
+        uint8_t *first_iteration = (uint8_t *)hash_func((char *)password, password_len, concatened_salt , salt_len + 4);
         free(concatened_salt);
         if (!first_iteration)
             return (NULL);
 
-        ft_memcpy(t[i], first_iteration, hlen);
+        ft_memcpy(t[i - 1], first_iteration, hlen);
         free(first_iteration);
-        pbkdf2_f4(t, hlen, chunk_count, iterations, hash_func);
+        pbkdf2_f4((char *)password, password_len, t, i - 1, hlen, iterations, hash_func);
     }
 
     for (int i = 0; i < chunk_count; i++)
@@ -195,6 +180,7 @@ char *pbkdf2_8(const char *password, const char *salt, t_pbkdf2_prf hash_func, i
         free(result);
         result = new_result;
     }
+    free_blocks(t);
 
     return result;
 }

@@ -97,3 +97,12 @@ void    free_command(t_ssl_command *command);
 char    *read_fd(int fd, size_t *out_size);
 
 char *mem_join(char *s1, size_t len1, char *s2, size_t len2);
+
+// key derivation pbkdf2
+typedef char *(*t_pbkdf2_prf)(char *, size_t, char *, size_t);
+
+char *pbkdf2_8(const char *password, const char *salt, t_pbkdf2_prf hash_func, int iterations, size_t hlen);
+
+char *hmac_hash256(const char *message, const char *key, const size_t message_len, size_t key_len);
+
+char *hmac_sha256_prf(char *key, size_t key_len, char *message, size_t message_len);

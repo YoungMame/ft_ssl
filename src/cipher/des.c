@@ -34,7 +34,7 @@
 static char    *append_h(char *hash, uint64_t value)
 {
 
-    char    *hex = ft_itoa_base_unsigned64(value, "0123456789abcdef", 8);
+    char    *hex = ft_itoa_base_unsigned8(value, "0123456789abcdef", 8);
     if (!hex)
         return (NULL);
     char    *str = ft_strjoin(hash, hex);
@@ -308,10 +308,14 @@ int des(t_ssl_command *command)
     {
         if (!params.password)
             return (ft_printf("ft_ssl: Error: No key or password provided\n"), 0);
-        // char *generated_key = pbkfd2(params.password, params.salt, 1000, 8);
-        // if (!generated_key)
-        //     return (0);
-        // params.key = generated_key;
+        char *generated_key = pbkdf2_8((const char *)params.password, (const char *)params.salt, hmac_sha256_prf, 1000, 8);
+        if (!generated_key)
+            return (0);
+        printf("Generated key: ");
+        for (int i = 0; i < 8; i++)
+            printf("%02x", (unsigned char)generated_key[i]);
+        printf("\n");
+        params.key = generated_key;
     };
     printf("ft_atoi_base64(%s):0x%" PRIx64"\n", command->messages[0].content, key);
     uint64_t *subkeys = des_key_schedule(key);
