@@ -1,17 +1,17 @@
 # include "ft_ssl.h"
 # include "inttypes.h"
 
-// void pbin(uint64_t v)
-// {
-//     uint64_t mask = (uint64_t)1 << 63;
-//     while (mask) {
-//         printf("%d", (v & mask) ? 1 : 0);
-//         mask >>= 1;
-//     }
-//     printf("\n");
-// }
+static void pbin(uint64_t v)
+{
+    uint64_t mask = (uint64_t)1 << 63;
+    while (mask) {
+        printf("%d", (v & mask) ? 1 : 0);
+        mask >>= 1;
+    }
+    printf("\n");
+}
 
-// void pbin32(uint32_t v)
+//static  void pbin32(uint32_t v)
 // {
 //     uint32_t mask = (uint32_t)1 << 31;
 //     while (mask) {
@@ -21,15 +21,15 @@
 //     printf("\n");
 // }
 
-// void pbin8(uint8_t v)
-// {
-//     uint8_t mask = (uint8_t)1 << 7;
-//     while (mask) {
-//         printf("%d", (v & mask) ? 1 : 0);
-//         mask >>= 1;
-//     }
-//     printf("\n");
-// }
+static void pbin8(uint8_t v)
+{
+    uint8_t mask = (uint8_t)1 << 7;
+    while (mask) {
+        printf("%d", (v & mask) ? 1 : 0);
+        mask >>= 1;
+    }
+    printf("\n");
+}
 
 // Append each hash values that result in hexadecimal format
 static uint8_t    *final_value(uint64_t *blocks, int chunk_count)
@@ -272,6 +272,8 @@ static uint64_t *des_ecb(uint64_t *blocks, int block_count, uint64_t *subkeys, b
     for (int i = 0; i < block_count; i++)
     {
         uint64_t ciphertext = des_encrypt_block(blocks[i], subkeys, decrypt);
+        printf("Block %d ciphertext: ", i);
+        pbin(ciphertext);
         output[i] = ciphertext;
     }
     return (output);
@@ -291,7 +293,14 @@ int des(t_ssl_command *command)
 
     uint64_t key_numeric = 0;
     if (params.key)
-        key_numeric = ft_atoi_base64(params.key, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+    {
+        printf("Key provided: ");
+        for (size_t i = 0; i < 8; i++)
+        {
+            pbin8((uint8_t)params.key[i]);
+            key_numeric = (key_numeric << 8) | (uint64_t)(uint8_t)params.key[i];
+        }
+    }
     else
     {
         if (!params.password)
@@ -328,6 +337,12 @@ int des(t_ssl_command *command)
 
     command->messages[0].output = (char *)final;
     command->messages[0].output_size = blocks_count * 8;
+
+    for (size_t i = 0; i < command->messages[0].output_size; i++)
+    {
+        pbin8(command->messages[0].output[i]);
+    }
+    printf("\n");
 
     des_output_messages(command, params, "des");
 

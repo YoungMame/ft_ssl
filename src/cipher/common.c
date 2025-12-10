@@ -1,5 +1,25 @@
 # include "ft_ssl.h"
 
+// static void pbin(uint64_t v)
+// {
+//     uint64_t mask = (uint64_t)1 << 63;
+//     while (mask) {
+//         printf("%d", (v & mask) ? 1 : 0);
+//         mask >>= 1;
+//     }
+//     printf("\n");
+// }
+
+// static void pbin8(uint8_t v)
+// {
+//     uint8_t mask = (uint8_t)1 << 7;
+//     while (mask) {
+//         printf("%d", (v & mask) ? 1 : 0);
+//         mask >>= 1;
+//     }
+//     printf("\n");
+// }
+
 int             base64_process_command_inputs(t_ssl_command *command)
 {
     if (command->message_count == 0)
@@ -144,10 +164,9 @@ t_des_params   des_process_command_flags(t_ssl_command *command)
                 return (ft_printf("ft_ssl: Error: Memory error\n"), params);
             for (int j = 0; j < 8; j++)
             {
-                uint8_t byte = decoded << (56 - (j * 8)) & 0xFF;
+                uint8_t byte = decoded >> (uint8_t)(56 - (j * 8)) & 0xFF;
                 params.key[j] = (char)byte;
             }
-
         }
         else if (command->flags[i].index == 6)
             params.password = command->flags[i].value;
@@ -159,7 +178,7 @@ t_des_params   des_process_command_flags(t_ssl_command *command)
                 return (ft_printf("ft_ssl: Error: Memory error\n"), params);
             for (int j = 0; j < 8; j++)
             {
-                uint8_t byte = decoded << (56 - (j * 8)) & 0xFF;
+                uint8_t byte = decoded >> (uint8_t)(56 - (j * 8)) & 0xFF;
                 params.salt[j] = (char)byte;
             }
         }
@@ -171,7 +190,7 @@ t_des_params   des_process_command_flags(t_ssl_command *command)
                 return (ft_printf("ft_ssl: Error: Memory error\n"), params);
             for (int j = 0; j < 8; j++)
             {
-                uint8_t byte = decoded << (56 - (j * 8)) & 0xFF;
+                uint8_t byte = decoded >> (uint8_t)(56 - (j * 8)) & 0xFF;
                 params.iv[j] = (char)byte;
             }
         }

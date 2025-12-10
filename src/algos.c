@@ -105,7 +105,7 @@ t_ssl_algo g_ssl_algos[SSL_MODE_COUNT] = {
     {
         .name = "des",
         .f = des,
-        .nb_options = 10,
+        .nb_options = 9,
         .options = des_options,
         .options_long = des_options_long,
         .args = des_args,
@@ -115,7 +115,7 @@ t_ssl_algo g_ssl_algos[SSL_MODE_COUNT] = {
     {
         .name = "des-ecb",
         .f = des,
-        .nb_options = 10,
+        .nb_options = 9,
         .options = des_options,
         .options_long = des_options_long,
         .args = des_args,
