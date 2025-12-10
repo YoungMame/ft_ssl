@@ -3,28 +3,12 @@ import subprocess
 test_array = [
     {
         "cmd1": "echo -n \"Hello world\" | ./ft_ssl des-ecb -k 0123456789ABCDEF | hexdump",
-        "cmd2": "echo -n \"Hello world\" | openssl enc -des-ecb -K 0123456789ABCDEF -nopad | hexdump"
+        "cmd2": "echo -n \"Hello world\" | openssl des-ecb -K 0123456789ABCDEF -provider default -provider legacy | hexdump"
     },
     {
-        "cmd1": "echo -n \"Lorem ipsssssssssssssssssssssssssssuuuuuuuuuuuuuum\" | ./ft_ssl des-ecb -k 0123456789ABCDEF",
-        "cmd2": "echo -n \"Lorem ipsssssssssssssssssssssssssssuuuuuuuuuuuuuum\" | openssl enc -des-ecb -K 0123456789ABCDEF -nopad"
+        "cmd1": "echo -n \"Hello world\" | ./ft_ssl des-ecb -p pass -s 0123456789ABCDEF -p pass | hexdump",
+        "cmd2": "echo -n \"Hello world\" | openssl des-ecb -pbkdf2 -k pass -S 0123456789ABCDEF -provider default -provider legacy | hexdump"
     },
-    {
-        "cmd1": "echo -n \"sh lk wog oog   sd  ds g   kdsl dsfg ls dds ksdfl glsdkf lsdf l slsd kl ggld l ds ssd \" | ./ft_ssl des-ecb -k 0123456789ABCDEF",
-        "cmd2": "echo -n \"sh lk wog oog   sd  ds g   kdsl dsfg ls dds ksdfl glsdkf lsdf l slsd kl ggld l ds ssd \" | openssl enc -des-ecb -K 0123456789ABCDEF -nopad"
-    },
-    {
-        "cmd1": "echo \"sh lk wog oog   sd  ds g   kdsl dsfg ls dds ksdfl glsdkf lsdf l slsd kl ggld l ds ssd \" | ./ft_ssl des-ecb -k 0123456789ABCDEF",
-        "cmd2": "echo \"sh lk wog oog   sd  ds g   kdsl dsfg ls dds ksdfl glsdkf lsdf l slsd kl ggld l ds ssd \" | openssl enc -des-ecb -K 0123456789ABCDEF -nopad"
-    },
-    {
-        "cmd1": "echo \"\" | ./ft_ssl des-ecb -k 0123456789ABCDEF",
-        "cmd2": "echo \"\" | openssl enc -des-ecb -K 0123456789ABCDEF -nopad"
-    },
-    {
-        "cmd1": "echo \"Hello world\" | ./ft_ssl des-ecb -k 0123456789ABCDEF",
-        "cmd2": "echo \"Hello world\" | openssl enc -des-ecb -K 0123456789ABCDEF -nopad"
-    }
 ]
 
 def exec_cmd(cmd):

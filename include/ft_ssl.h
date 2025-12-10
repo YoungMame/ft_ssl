@@ -74,6 +74,10 @@ char *sha256_hashing(char *message, size_t message_len);
 // cipher/base64.c
 int base64(t_ssl_command *command);
 
+char *base64_decode(const char *input, size_t input_len, size_t *out_size);
+
+char *base64_encode(const char *input, const size_t input_len, size_t *out_size);
+
 // cipher/base64.c
 int base64(t_ssl_command *command);
 

@@ -3,9 +3,6 @@
 #define SHA256_BLOCK_SIZE 64
 #define SHA256_DIGEST_LEN 32
 
-// Wrapper pour adapter hmac_hash256 au type t_pbkdf2_prf
-// t_pbkdf2_prf attend (key, key_len, message, message_len)
-// hmac_hash256 prend (message, message_len, key, key_len)
 char *hmac_sha256_prf(char *key, size_t key_len, char *message, size_t message_len)
 {
     return hmac_hash256(message, key, message_len, key_len);
@@ -121,7 +118,7 @@ static uint32_t pbkdf2_f4(const char *password, int password_len, uint8_t **t, i
 {
     // t[0] = HMAC(password, salt || INT_32_BE(i))
     // Déjà fait avant l'appel
-    
+    printf("pbkdf2_f4: iterations = %d\n", iterations);
     for (int i = 1; i < iterations; i++)  // Commence à 1, pas 0
     {
         // U_i = HMAC(password, U_{i-1})
@@ -151,13 +148,15 @@ char *pbkdf2_8(const char *password, const char *salt, t_pbkdf2_prf hash_func, i
     int chunk_count = (8 + hlen - 1) / hlen; //
     char *result = NULL;
 
+    printf("pbkdf2_8: chunk_count = %d\n", chunk_count);
     uint8_t **t = init_blocks(hlen, chunk_count);
     if (!t)
         return (ft_printf("ft_ssl: Error: Memory error\n"), NULL);
 
-    for (int i = 1; i < chunk_count; i++)
+    for (int i = 0; i < chunk_count; i++)
     {
         uint32_t block_index_be = __builtin_bswap32((uint32_t)i);
+        printf("block index be: [ %"PRIu32" ]", block_index_be);
         char *concatened_salt = mem_join((char *)salt, salt_len, (void*)&block_index_be, 4);
         if (!concatened_salt)
             return (ft_printf("ft_ssl: Error: Memory error\n"), free_blocks(t), NULL);
@@ -167,9 +166,9 @@ char *pbkdf2_8(const char *password, const char *salt, t_pbkdf2_prf hash_func, i
         if (!first_iteration)
             return (NULL);
 
-        ft_memcpy(t[i - 1], first_iteration, hlen);
+        ft_memcpy(t[i], first_iteration, hlen);
         free(first_iteration);
-        pbkdf2_f4((char *)password, password_len, t, i - 1, hlen, iterations, hash_func);
+        pbkdf2_f4((char *)password, password_len, t, i, hlen, iterations, hash_func);
     }
 
     for (int i = 0; i < chunk_count; i++)

@@ -27,7 +27,7 @@ static int get_base64_index(char c) {
     return (-1);
 }
 
-static char *base64_decode(const char *input, size_t input_len, size_t *out_size) {
+char *base64_decode(const char *input, size_t input_len, size_t *out_size) {
     char *result = malloc_decode_buffer(input_len);
     if (!result)
         return ft_printf("ft_ssl: Error: Memory error\n"), NULL;
@@ -74,7 +74,7 @@ static char *base64_decode(const char *input, size_t input_len, size_t *out_size
     return result;
 }
 
-static char *base64_encode(const char *input, const size_t input_len, size_t *out_size) {
+char *base64_encode(const char *input, const size_t input_len, size_t *out_size) {
     char *result = malloc_buffer(input_len);
     if (!result)
         return ft_printf("ft_ssl: Error: Memory error\n"), NULL;

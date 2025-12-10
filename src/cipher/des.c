@@ -31,34 +31,22 @@
 //     printf("\n");
 // }
 
-static char    *append_h(char *hash, uint64_t value)
-{
-
-    char    *hex = ft_itoa_base_unsigned8(value, "0123456789abcdef", 8);
-    if (!hex)
-        return (NULL);
-    char    *str = ft_strjoin(hash, hex);
-    free(hex);
-    return str;
-}
-
 // Append each hash values that result in hexadecimal format
-static char    *final_hash_value(uint64_t *blocks, int chunk_count)
+static uint8_t    *final_value(uint64_t *blocks, int chunk_count)
 {
-    char *digest = malloc(1 * sizeof(char));
-    if (!digest)
-        return NULL;
+    uint8_t *final = ft_calloc(chunk_count * 8, sizeof(uint8_t));
+    if (!final)
+        return (NULL);
 
     for (int i = 0; i < chunk_count; i++)
     {
-        char *tmp = append_h(digest, blocks[i]);
-        if (!digest)
-            return (free(tmp), free(digest),NULL);
-        free(digest);
-        digest = tmp;
-
+        for (int j = 0; j < 8; j++)
+        {
+            uint8_t byte = (blocks[i] >> ((7 - j) * 8)) & 0xFF;
+            final[i * 8 + j] = byte;
+        }
     }
-    return (digest);
+    return (final);
 }
 
 static void des_permute_choice1(uint64_t input, uint32_t *left, uint32_t *right)
@@ -294,50 +282,56 @@ static uint64_t *des_ecb(uint64_t *blocks, int block_count, uint64_t *subkeys, b
 int des(t_ssl_command *command)
 {
     t_des_params   params = des_process_command_flags(command);
-    int             success = des_process_command_inputs(command);
+    int             success = des_process_command_inputs(command, params);
     if (!success)
         return (0);
 
     if (command->message_count == 0 || !command->messages[0].content || command->messages[0].content_size == 0)
-        return (ft_printf("ft_ssl: Error: No input provided\n"), 0);
-    
-    uint64_t key = 0;
+        return (free_params_des(params), ft_printf("ft_ssl: Error: No input provided\n"), 0);
+
+    uint64_t key_numeric = 0;
     if (params.key)
-        key = ft_atoi_base64(params.key, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+        key_numeric = ft_atoi_base64(params.key, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
     else
     {
         if (!params.password)
-            return (ft_printf("ft_ssl: Error: No key or password provided\n"), 0);
-        char *generated_key = pbkdf2_8((const char *)params.password, (const char *)params.salt, hmac_sha256_prf, 1000, 8);
+            return (free_params_des(params), ft_printf("ft_ssl: Error: No key or password provided\n"), 0);
+        char *generated_key = pbkdf2_8((const char *)params.password, (const char *)params.salt, hmac_sha256_prf, 10000, 8);
         if (!generated_key)
-            return (0);
-        printf("Generated key: ");
+            return (free_params_des(params), 0);
         for (int i = 0; i < 8; i++)
-            printf("%02x", (unsigned char)generated_key[i]);
-        printf("\n");
-        params.key = generated_key;
-    };
-    printf("ft_atoi_base64(%s):0x%" PRIx64"\n", command->messages[0].content, key);
-    uint64_t *subkeys = des_key_schedule(key);
+        {
+            key_numeric = (key_numeric << 8) | (uint64_t)(uint8_t)generated_key[i];
+        }
+    }
+    uint64_t *subkeys = des_key_schedule(key_numeric);
     if (!subkeys)
         return (0);
 
     int blocks_count;
     uint64_t *blocks = des_allocate_chunks(command->messages[0].content, false, &blocks_count, command->messages[0].content_size);
-    if (!blocks) return (free(subkeys), 0);
+    if (!blocks) return (free_params_des(params), free(subkeys), 0);
 
     uint64_t    *cipher = des_ecb(blocks, blocks_count, subkeys, params.decode);
-    char        *hash = final_hash_value(cipher, blocks_count);
+    // printf("Cipher: ");
+    // for (int i = 0; i < blocks_count; i++)
+    // {
+    //     printf("%s ", ft_itoa_base_unsigned64(cipher[i], "0123456789abcdef", 16));
+    // }
+    uint8_t *final = final_value(cipher, blocks_count);
+    if (!final)
+        return (free(blocks), free(subkeys), free(cipher), free_params_des(params), ft_printf("ft_ssl: Error: Memory error\n"), 0);
+
     free(blocks);
     free(subkeys);
-    if (!cipher)
-        return (0);
+    free(cipher);
 
-    command->messages[0].output = hash;
+    command->messages[0].output = (char *)final;
+    command->messages[0].output_size = blocks_count * 8;
 
     des_output_messages(command, params, "des");
-     if (params.output_fd != STDOUT_FILENO)
-        close(params.output_fd);
+
+    free_params_des(params);
     
     return (1);
 }

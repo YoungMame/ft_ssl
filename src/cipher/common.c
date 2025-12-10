@@ -67,12 +67,13 @@ void    base64_output_messages(t_ssl_command *command, t_base64_params params, c
     return ;
 }
 
-int             des_process_command_inputs(t_ssl_command *command)
+int             des_process_command_inputs(t_ssl_command *command, t_des_params params)
 {
     if (command->message_count == 0)
     {
-
         command->messages[command->message_count].input = ft_strdup("stdin");
+        if (!command->messages[command->message_count].input)
+            return (ft_printf("ft_ssl: Error: memory error\n"), 0);
         command->messages[command->message_count].type = SSL_INPUT_STDIN;
         command->messages[command->message_count].content = read_fd(STDIN_FILENO, &command->messages[command->message_count].content_size);
         command->message_count += 1;
@@ -89,6 +90,17 @@ int             des_process_command_inputs(t_ssl_command *command)
         if (!command->messages[0].content)
             return (ft_printf("ft_ssl: Error: cannot read\n"), 0);
     }
+    // process a base 64 input
+    if (params.process_in_base64 && !params.decode)
+    {
+        size_t outsize = 0;
+        char *encoded = base64_decode(command->messages[0].content, command->messages[0].content_size, &outsize);
+        if (!encoded)
+            return 0;
+        free(command->messages[0].content);
+        command->messages[0].content = encoded;
+        command->messages[0].content_size = outsize;
+    }
     return (1);
 }
 
@@ -102,6 +114,7 @@ t_des_params   des_process_command_flags(t_ssl_command *command)
     params.password = NULL;
     params.salt = NULL;
     params.iv = NULL;
+    params.process_in_base64 = false;
 
     for (int i = 0; i < command->flag_count; i++)
     {
@@ -124,15 +137,58 @@ t_des_params   des_process_command_flags(t_ssl_command *command)
                 return (ft_printf("ft_ssl: Error: %s: Cannot open output file\n", command->flags[i].value), params);
         }
         else if (command->flags[i].index == 5)
-            params.key = command->flags[i].value;
+        {
+            uint64_t decoded = ft_atoi_base64(command->flags[i].value, "0123456789ABCDEF");
+            params.key = ft_calloc(8, sizeof(char));
+            if (!params.key)
+                return (ft_printf("ft_ssl: Error: Memory error\n"), params);
+            for (int j = 0; j < 8; j++)
+            {
+                uint8_t byte = decoded << (56 - (j * 8)) & 0xFF;
+                params.key[j] = (char)byte;
+            }
+
+        }
         else if (command->flags[i].index == 6)
             params.password = command->flags[i].value;
         else if (command->flags[i].index == 7)
-            params.salt = command->flags[i].value;
+        {
+            uint64_t decoded = ft_atoi_base64(command->flags[i].value, "0123456789ABCDEF");
+            params.salt = ft_calloc(8, sizeof(char));
+            if (!params.salt)
+                return (ft_printf("ft_ssl: Error: Memory error\n"), params);
+            for (int j = 0; j < 8; j++)
+            {
+                uint8_t byte = decoded << (56 - (j * 8)) & 0xFF;
+                params.salt[j] = (char)byte;
+            }
+        }
         else if (command->flags[i].index == 8)
-            params.iv = command->flags[i].value;
+        {
+            uint64_t decoded = ft_atoi_base64(command->flags[i].value, "0123456789ABCDEF");
+            params.iv = ft_calloc(8, sizeof(char));
+            if (!params.iv)
+                return (ft_printf("ft_ssl: Error: Memory error\n"), params);
+            for (int j = 0; j < 8; j++)
+            {
+                uint8_t byte = decoded << (56 - (j * 8)) & 0xFF;
+                params.iv[j] = (char)byte;
+            }
+        }
     }
     return (params);
+}
+
+void    free_params_des(t_des_params params)
+{
+    if (params.key)
+        free(params.key);
+    if (params.salt)
+        free(params.salt);
+    if (params.iv)
+        free(params.iv);
+    if (params.output_fd != STDOUT_FILENO)
+        close(params.output_fd);
 }
 
 void    des_output_messages(t_ssl_command *command, t_des_params params, const char *algo_name)
@@ -141,9 +197,26 @@ void    des_output_messages(t_ssl_command *command, t_des_params params, const c
     for (size_t i = 0; i < command->message_count; i++)
     {
         t_ssl_message   *message = &command->messages[i];
+        size_t j = 0;
+        if (params.process_in_base64 && params.decode)
+        {
+            size_t outsize = 0;
+            char *base64_decoded = base64_encode(command->messages[i].output, command->messages[i].output_size, &outsize);
+            while (j < outsize)
+            {
+                write(params.output_fd, &(base64_decoded[j]), 1);
+                j++;
+            }
+        }
+        else
+        {
+            while (j < command->messages[i].output_size)
+            {
+                write(params.output_fd, &(message->output[j]), 1);
+                j++;
+            }
+        }
 
-        ft_putstr_fd(message->output, params.output_fd);
-        ft_putstr_fd("\n", params.output_fd);
     }
     return ;
 }
