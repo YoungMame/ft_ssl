@@ -65,9 +65,9 @@ def tests():
         hash2 = parse_output(output2);
 
         if hash1 == hash2:
-            print(f"Test {i} passed");
+            print(f"Test md5 {i} passed");
         else:
-            print(f"Test {i} failed: {cmd1} != {cmd2}");
+            print(f"Test md5 {i} failed: {cmd1} != {cmd2}");
             print(f"  {hash1} != {hash2}");
             exit(0);
         i += 1;

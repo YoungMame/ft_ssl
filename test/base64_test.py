@@ -60,9 +60,9 @@ def tests():
         output2 = exec_cmd(cmd2);
 
         if output1.strip() == output2.strip():
-            print(f"Test {i} passed");
+            print(f"Test base64 {i} passed");
         else:
-            print(f"Test {i} failed: {cmd1} != {cmd2}");
+            print(f"Test base64 {i} failed: {cmd1} != {cmd2}");
             print(f"  {output1} != {output2}");
             exit(0);
         i += 1;
