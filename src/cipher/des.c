@@ -32,15 +32,36 @@
 // }
 
 // Append each hash values that result in hexadecimal format
-static uint8_t    *final_value(uint64_t *blocks, int chunk_count)
+static uint8_t    *final_value(uint64_t *blocks, int chunk_count, bool decrypt)
 {
-    uint8_t *final = ft_calloc(chunk_count * 8, sizeof(uint8_t));
+
+    // get the last byte to get padding value
+    uint8_t padding_byte = 0;
+    if (decrypt)
+    {
+        padding_byte = (int)((blocks[chunk_count - 1] << 56) & 0xFF);
+        printf("Padding byte: %d\n", padding_byte);
+        bool valid_padding = true;
+        for (int i = 0; i < 8 - (padding_byte % 8); i++)
+        {
+            uint8_t byte = (blocks[chunk_count - 1] >> ((7 - i) * 8)) & 0xFF;
+            if (byte != padding_byte)
+            {
+                valid_padding = false;
+                break;
+            }
+        }
+        if (!valid_padding)
+            return (ft_printf("ft_ssl: Error: Invalid padding\n"), NULL);
+    }
+
+    uint8_t *final = ft_calloc(chunk_count * 8 - (decrypt && (padding_byte % 8 == 0)), sizeof(uint8_t));
     if (!final)
         return (NULL);
 
-    for (int i = 0; i < chunk_count; i++)
+    for (int i = 0; i < chunk_count - (padding_byte % 8 == 0); i++)
     {
-        for (int j = 0; j < 8; j++)
+        for (int j = 0; j < 8 - (decrypt ? padding_byte % 8 : 0); j++)
         {
             uint8_t byte = (blocks[i] >> ((7 - j) * 8)) & 0xFF;
             final[i * 8 + j] = byte;
@@ -235,6 +256,8 @@ static uint64_t des_encrypt_block(uint64_t plaintext, uint64_t *subkeys, bool de
     return plaintext;
 }
 
+// TODO : BUG : Padding is not removed correctly on decryption
+
 static uint64_t *des_allocate_chunks(char *message, bool no_pad, int *chunk_count, size_t message_len)
 {
     *chunk_count = message_len / 8;
@@ -327,7 +350,7 @@ int des(t_ssl_command *command)
     // {
     //     printf("%s ", ft_itoa_base_unsigned64(cipher[i], "0123456789abcdef", 16));
     // }
-    uint8_t *final = final_value(cipher, blocks_count);
+    uint8_t *final = final_value(cipher, blocks_count, params.decode);
     if (!final)
         return (free(blocks), free(subkeys), free(cipher), free_params_des(params), ft_printf("ft_ssl: Error: Memory error\n"), 0);
 
