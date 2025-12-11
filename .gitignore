@@ -1,5 +1,4 @@
 ft_ssl
 .obj
 .vscode
-test/files/out1
-test/files/out2
+test/files/.out
