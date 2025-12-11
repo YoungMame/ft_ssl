@@ -106,10 +106,14 @@ int             hash_process_command_inputs(t_ssl_command *command, t_hash_param
         }
         else if (message->type == SSL_INPUT_STRING)
         {
-            message->content = ft_strdup(message->input);
+            // message->content = ft_strdup(message->input);
+            size_t _strlen = ft_strlen(message->input);
+            message->content = ft_calloc(_strlen, sizeof(char));
             if (!message->content)
                 return (ft_printf("Error: malloc failed\n"), 0);
-            message->content_size = ft_strlen(message->content);
+            for (size_t j = 0; j < _strlen; j++)
+                message->content[j] = message->input[j];
+            message->content_size = _strlen;
         }
     }
     return (1);

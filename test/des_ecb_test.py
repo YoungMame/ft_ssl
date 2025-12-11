@@ -47,8 +47,8 @@ def run_cmd_out_pair(array):
     # open(filename2, "w").close();
     if err1 or err2:
         print("Error during command execution:");
-        print("Cmd 1 stderr:", err1.decode(errors="ignore"));
-        print("Cmd 2 stderr:", err2.decode(errors="ignore"));
+        print("Cmd 1 stderr:", err1.decode(errors="ignore", engine="python"));
+        print("Cmd 2 stderr:", err2.decode(errors="ignore", engine="python"));
         return 0;
     diff = run_cmd(["diff", filename1, filename2])[0]
     if diff:
@@ -64,8 +64,8 @@ def run_cmd_pair(array):
     out2, err2 = run_cmd(array[1]);
     if err1 or err2:
         print("Error during command execution:");
-        print("Cmd 1 stderr:", err1.decode(errors="ignore"));
-        print("Cmd 2 stderr:", err2.decode(errors="ignore"));
+        print("Cmd 1 stderr:", err1.decode(errors="ignore", engine="python"));
+        print("Cmd 2 stderr:", err2.decode(errors="ignore", engine="python"));
         return 0;
     if out1 != out2:
         print("Output mismatch:");
@@ -81,16 +81,16 @@ def run_cmd_pair_x2(array):
     out2a, err2a = run_cmd(array[1]);
     if err1a or err2a:
         print("Error during command execution:");
-        print("Cmd 1 stderr:", err1a.decode(errors="ignore"));
-        print("Cmd 2 stderr:", err2a.decode(errors="ignore"));
+        print("Cmd 1 stderr:", err1a.decode(errors="ignore", engine="python"));
+        print("Cmd 2 stderr:", err2a.decode(errors="ignore", engine="python"));
         return 0;
 
     out1b, err1b = run_cmd(array[2]);
     out2b, err2b = run_cmd(array[3]);
     if err1b or err2b:
         print("Error during command execution:");
-        print("Cmd 1 stderr:", err1b.decode(errors="ignore"));
-        print("Cmd 2 stderr:", err2b.decode(errors="ignore"));
+        print("Cmd 1 stderr:", err1b.decode(errors="ignore", engine="python"));
+        print("Cmd 2 stderr:", err2b.decode(errors="ignore", engine="python"));
         return 0;
 
     filename1 = array[2][array[0].index("-o") + 1];
