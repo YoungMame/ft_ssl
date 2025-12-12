@@ -17,8 +17,8 @@ def build_encode_decode_cross_test(test_file, test_out_file, test_decrypted_file
            ["openssl", "des-ecb", "-in", test_out_file + "_ft_ssl", "-out", test_decrypted_file + "_openssl", "-K", key, "-provider", "default", "-provider", "legacy"]
 
 file_tests = [
-    [ "test/files/text", "0C871EEA3AF7AAAA" ],
     [ "test/files/binary", "0C871EEA3AF7AAAA" ],
+    [ "test/files/text", "0C871EEA3AF7AAAA" ],
     [ "test/files/image.png", "0C871EEA3AF7AAAA" ],
 ]
 
@@ -35,7 +35,7 @@ encode_decode_cross_tests = [
 ]
 
 def run_cmd(cmd):
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE);
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=False);
     return proc.stdout, proc.stderr;
 
 def run_cmd_out_pair(array):

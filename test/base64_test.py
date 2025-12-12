@@ -44,7 +44,7 @@ test_array = [
 ]
 
 def exec_cmd(cmd):
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True);
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=False, shell=True);
     if (result.returncode != 0):
         print(f"Command '{cmd}' failed with error: {result.stderr}");
     return result.stdout;

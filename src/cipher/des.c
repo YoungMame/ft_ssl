@@ -31,37 +31,51 @@
 //     printf("\n");
 // }
 
+static int check_padding(uint64_t *blocks, int chunk_count)
+{
+    // get the last byte to get padding value
+    uint8_t padding_byte = (blocks[chunk_count - 1] >> 0) & 0xFF;
+    // printf("Padding byte detected: 0x%02x (%d)\n", padding_byte, padding_byte);
+
+    if (padding_byte == 0 || padding_byte > 8)
+        return (-1);
+
+    bool valid_padding = true;
+    for (int i = 0; i < padding_byte && i < 8; i++) {
+        uint8_t byte = (blocks[chunk_count - 1] >> (i * 8)) & 0xFF;
+        if (byte != padding_byte) {
+            valid_padding = false;
+            break;
+        }
+    }
+
+    if (!valid_padding)
+        return (-1);
+    
+    return ((int)padding_byte);
+
+}
+
 // Append each hash values that result in hexadecimal format
 static uint8_t    *final_value(uint64_t *blocks, int chunk_count, bool decrypt)
 {
 
     // get the last byte to get padding value
-    uint8_t padding_byte = 0;
+    int pad = 0;
     if (decrypt)
     {
-        padding_byte = (int)((blocks[chunk_count - 1] << 56) & 0xFF);
-        printf("Padding byte: %d\n", padding_byte);
-        bool valid_padding = true;
-        for (int i = 0; i < 8 - (padding_byte % 8); i++)
-        {
-            uint8_t byte = (blocks[chunk_count - 1] >> ((7 - i) * 8)) & 0xFF;
-            if (byte != padding_byte)
-            {
-                valid_padding = false;
-                break;
-            }
-        }
-        if (!valid_padding)
+        pad = check_padding(blocks, chunk_count);
+        if (pad == -1)
             return (ft_printf("ft_ssl: Error: Invalid padding\n"), NULL);
     }
 
-    uint8_t *final = ft_calloc(chunk_count * 8 - (decrypt && (padding_byte % 8 == 0)), sizeof(uint8_t));
+    uint8_t *final = ft_calloc(chunk_count * 8 - (decrypt && (pad % 8 == 0)), sizeof(uint8_t));
     if (!final)
         return (NULL);
 
-    for (int i = 0; i < chunk_count - (padding_byte % 8 == 0); i++)
+    for (int i = 0; i < chunk_count - (decrypt && (pad % 8 == 0)); i++)
     {
-        for (int j = 0; j < 8 - (decrypt ? padding_byte % 8 : 0); j++)
+        for (int j = 0; j < 8 - (decrypt ? pad % 8 : 0); j++)
         {
             uint8_t byte = (blocks[i] >> ((7 - j) * 8)) & 0xFF;
             final[i * 8 + j] = byte;
@@ -258,29 +272,26 @@ static uint64_t des_encrypt_block(uint64_t plaintext, uint64_t *subkeys, bool de
 
 // TODO : BUG : Padding is not removed correctly on decryption
 
-static uint64_t *des_allocate_chunks(char *message, bool no_pad, int *chunk_count, size_t message_len)
+static uint64_t *des_allocate_chunks(char *message, int *chunk_count, size_t message_len, bool decrypt)
 {
-    *chunk_count = message_len / 8;
-    if (message_len % 8 != 0)
-        (*chunk_count) += 1;
-    if (*chunk_count <= 0)
-        return (NULL);
+    size_t pad = 8 - (message_len % 8);
+    if (pad == 0) pad = 8;
+
+    size_t padded_len = message_len + (decrypt ? 0 : pad);
+    *chunk_count = padded_len / 8;
+
     uint64_t *chunks = ft_calloc(*chunk_count, sizeof(uint64_t));
     if (!chunks)
         return (ft_printf("ft_ssl: Error: Memory error\n"), NULL);
-
-    int j = 0;
-    uint8_t padding_diff = (u_int8_t)(no_pad ? 0x00 : 8 - (message_len % 8));
-    while (j < *chunk_count)
+    for (size_t j = 0; j < (size_t)*chunk_count; j++)
     {
         chunks[j] = 0x0;
         for (int i = 0; i < 8; i++)
         {
             int index = j * 8 + i;
-            uint8_t byte = (index < (int)message_len) ? (uint8_t)message[index] : padding_diff;
+            uint8_t byte = (index < (int)message_len) ? (uint8_t)message[index] : (decrypt ? 0 : (uint8_t)pad);
             chunks[j] |= (uint64_t)byte << ((7 - i) * 8);
         }
-        j++;
     }
 
     return (chunks);
@@ -341,7 +352,7 @@ int des(t_ssl_command *command)
         return (0);
 
     int blocks_count;
-    uint64_t *blocks = des_allocate_chunks(command->messages[0].content, false, &blocks_count, command->messages[0].content_size);
+    uint64_t *blocks = des_allocate_chunks(command->messages[0].content, &blocks_count, command->messages[0].content_size, params.decode);
     if (!blocks) return (free_params_des(params), free(subkeys), 0);
 
     uint64_t    *cipher = des_ecb(blocks, blocks_count, subkeys, params.decode);
@@ -352,7 +363,7 @@ int des(t_ssl_command *command)
     // }
     uint8_t *final = final_value(cipher, blocks_count, params.decode);
     if (!final)
-        return (free(blocks), free(subkeys), free(cipher), free_params_des(params), ft_printf("ft_ssl: Error: Memory error\n"), 0);
+        return (free(blocks), free(subkeys), free(cipher), free_params_des(params), 0);
 
     free(blocks);
     free(subkeys);
