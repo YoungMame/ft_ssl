@@ -2,3 +2,4 @@ ft_ssl
 .obj
 .vscode
 test/files/.out
+**/.DS_Store
