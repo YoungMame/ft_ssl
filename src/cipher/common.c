@@ -201,13 +201,14 @@ t_des_params   des_process_command_flags(t_ssl_command *command)
         {
             check_hex_len(command->flags[i].value, 16);
             uint64_t decoded = ft_atoi_base64(command->flags[i].value, "0123456789ABCDEF");
+            // printf("decoded: %llx\n", decoded);
             params.salt = ft_calloc(8, sizeof(char));
             if (!params.salt)
                 return (ft_printf("ft_ssl: Error: Memory error\n"), params);
             for (int j = 0; j < 8; j++)
             {
                 uint8_t byte = decoded >> (uint8_t)(56 - (j * 8)) & 0xFF;
-                params.salt[j] = (char)byte;
+                params.salt[j] = (unsigned char)byte;
             }
         }
         else if (command->flags[i].index == 8)

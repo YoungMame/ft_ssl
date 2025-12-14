@@ -41,7 +41,6 @@ char *base64_decode(const char *input, size_t input_len, size_t *out_size) {
     {
         unsigned char ch = input[i];
 
-        /* padding: end of meaningful data */
         if (ch == '=')
             break;
 
@@ -49,7 +48,7 @@ char *base64_decode(const char *input, size_t input_len, size_t *out_size) {
             continue;
 
         int index = get_base64_index((char)ch);
-        /* ignore any other invalid characters */
+
         if (index == -1)
             continue;
 
@@ -57,7 +56,7 @@ char *base64_decode(const char *input, size_t input_len, size_t *out_size) {
 
         for (int j = 0; j < 6; j++)
         {
-            unsigned char bit = (index_char >> (5 - j)) & 0x1u;
+            unsigned char bit = (index_char >> (5 - j)) & 0x1u; // 1 bit
             current_c = (unsigned char)((current_c << 1) | bit);
             bit_index++;
             if (bit_index == 8)

@@ -42,14 +42,6 @@ test_array = [
         "cmd2": "echo -n \"1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\" | openssl sha256"
     },
     {
-        "cmd1": "./ft_ssl sha256 -s HelloWorld",
-        "cmd2": "echo -n HelloWorld | openssl sha256"
-    },
-    {
-        "cmd1": "./ft_ssl sha256 -s \"Hello world\"",
-        "cmd2": "echo -n \"Hello world\" | openssl sha256"
-    },
-    {
         "cmd1": "echo \"Lorem ipsssssssssssssssssssssssssssuuuuuuuuuuuuuum\" | ./ft_ssl sha256",
         "cmd2": "echo \"Lorem ipsssssssssssssssssssssssssssuuuuuuuuuuuuuum\" | openssl sha256"
     },

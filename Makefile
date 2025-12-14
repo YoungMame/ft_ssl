@@ -13,6 +13,12 @@ SRCS = $(addprefix $(SRC_DIR)/, $(addsuffix .c, $(SRCS_LIST)))
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 INCS = -I$(INC_DIR) -I$(LIBFT_DIR)
 
+OS = $(shell uname)
+ifeq ($(OS), Darwin)
+	CFLAGS += -fsanitize=address,undefined -g
+	CC = clang
+endif
+
 all: $(EXECUTABLE)
 
 $(EXECUTABLE): $(LIBFT) $(OBJS)

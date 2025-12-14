@@ -42,10 +42,8 @@ typedef struct s_ssl_command {
     t_ssl_message   messages[999];
 }   t_ssl_command;
 
-/* function pointer for algorithm entry */
 typedef int (*t_ssl_fptr)(t_ssl_command *command);
 
-/* metadata for each algorithm */
 typedef struct s_ssl_algo {
     char      *name;
     t_ssl_fptr      f;
@@ -105,8 +103,6 @@ char *mem_join(char *s1, size_t len1, char *s2, size_t len2);
 // key derivation pbkdf2
 typedef char *(*t_pbkdf2_prf)(char *, size_t, char *, size_t);
 
-char *pbkdf2_8(const char *password, const char *salt, t_pbkdf2_prf hash_func, int iterations, size_t hlen);
+uint8_t *pbkdf2(const char *password, size_t password_len, const char *salt, size_t salt_len, t_pbkdf2_prf hash_func, size_t hlen, size_t iter, size_t dklen);
 
-char *hmac_hash256(const char *message, const char *key, const size_t message_len, size_t key_len);
-
-char *hmac_sha256_prf(char *key, size_t key_len, char *message, size_t message_len);
+char *hmac_hash256(char *message, size_t message_len, char *key, size_t key_len);

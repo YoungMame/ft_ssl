@@ -325,7 +325,7 @@ int des(t_ssl_command *command)
     if (command->message_count == 0 || !command->messages[0].content || command->messages[0].content_size == 0)
         return (free_params_des(params), ft_printf("ft_ssl: Error: No input provided\n"), 0);
 
-    uint64_t key_numeric = 0;
+    uint64_t key_numeric = 0x0;
     if (params.key)
     {
         // printf("Key provided: ");
@@ -339,12 +339,12 @@ int des(t_ssl_command *command)
     {
         if (!params.password)
             return (free_params_des(params), ft_printf("ft_ssl: Error: No key or password provided\n"), 0);
-        char *generated_key = pbkdf2_8((const char *)params.password, (const char *)params.salt, hmac_sha256_prf, 10000, 8);
+        uint8_t *generated_key = pbkdf2((const char *)params.password, ft_strlen(params.password), (const char *)params.salt, ft_strlen(params.salt), hmac_hash256, 32, 10000, 8);
         if (!generated_key)
             return (free_params_des(params), 0);
         for (int i = 0; i < 8; i++)
         {
-            key_numeric = (key_numeric << 8) | (uint64_t)(uint8_t)generated_key[i];
+            key_numeric = (key_numeric << 8) | generated_key[i];
         }
     }
     uint64_t *subkeys = des_key_schedule(key_numeric);
