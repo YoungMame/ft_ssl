@@ -4,29 +4,30 @@
 #define SHA256_DIGEST_LEN 32
 
 // HMAC = h ( (K ^ opad) ∥ h( (K ^ ipad) ∥ message ) )
-char *hmac_hash256(char *message, size_t message_len, char *key, size_t key_len)
+uint8_t *hmac_hash256(uint8_t *message, size_t message_len, uint8_t *key, size_t key_len)
 {
-    char ipad[SHA256_BLOCK_SIZE];
-    char opad[SHA256_BLOCK_SIZE];
-    char *k = NULL;
+    uint8_t ipad[SHA256_BLOCK_SIZE];
+    uint8_t opad[SHA256_BLOCK_SIZE];
+    uint8_t *k = NULL;
 
     if (key_len > SHA256_BLOCK_SIZE) {
-        k = sha256_hashing((char *)key, key_len, false);
+        k = (uint8_t *)sha256_hashing((char *)key, key_len, false);
         key_len = SHA256_DIGEST_LEN;
     }
     else {
-        k = ft_calloc(SHA256_BLOCK_SIZE, sizeof(char));
+        k = ft_calloc(SHA256_BLOCK_SIZE, sizeof(uint8_t));
         if (!k)
             return (ft_printf("ft_ssl: Error: Memory error\n"), NULL);
         ft_memcpy(k, key, key_len);
     }
-    
+
     for (size_t i = 0; i < SHA256_BLOCK_SIZE; i++) {
         ipad[i] = k[i] ^ 0x36;
         opad[i] = k[i] ^ 0x5c;
     }
-    char *inner_key = ft_calloc(SHA256_BLOCK_SIZE, sizeof(char));
-    char *outer_key = ft_calloc(SHA256_BLOCK_SIZE, sizeof(char));
+
+    uint8_t *inner_key = ft_calloc(SHA256_BLOCK_SIZE, sizeof(uint8_t));
+    uint8_t *outer_key = ft_calloc(SHA256_BLOCK_SIZE, sizeof(uint8_t));
     if (!inner_key || !outer_key)
         return (ft_printf("ft_ssl: Error: Memory error\n"), free(k), NULL);
     for (size_t i = 0; i < SHA256_BLOCK_SIZE; i++)
@@ -34,22 +35,22 @@ char *hmac_hash256(char *message, size_t message_len, char *key, size_t key_len)
         inner_key[i] = k[i] ^ ipad[i];
         outer_key[i] = k[i] ^ opad[i];
     }
-    char *inner_message = mem_join(inner_key, SHA256_BLOCK_SIZE, (char *)message, message_len);
+    uint8_t *inner_message = (uint8_t *)mem_join((char *)inner_key, SHA256_BLOCK_SIZE, (char *)message, message_len);
     if (!inner_message)
         return (ft_printf("ft_ssl: Error: Memory error\n"), free(k), free(inner_key), free(outer_key), NULL);
 
     // hashing inner message
-    char *inner_hash = sha256_hashing(inner_message, SHA256_BLOCK_SIZE + message_len, false);
+    uint8_t *inner_hash = (uint8_t *)sha256_hashing((char *)inner_message, SHA256_BLOCK_SIZE + message_len, false);
     if (!inner_hash)
         return (ft_printf("ft_ssl: Error: Memory error\n"), free(k), free(inner_key), free(outer_key), free(inner_message), NULL);
 
     // creating outer message
-    char *outer_message = mem_join(outer_key, SHA256_BLOCK_SIZE, inner_hash, SHA256_DIGEST_LEN);
+    uint8_t *outer_message = (uint8_t *)mem_join((char *)outer_key, SHA256_BLOCK_SIZE, (char *)inner_hash, SHA256_DIGEST_LEN);
     if (!outer_message)
         return (ft_printf("ft_ssl: Error: Memory error\n"), free(k), free(inner_key), free(outer_key), free(inner_message), free(inner_hash), NULL);
 
     // final HMAC
-    char *hmac = sha256_hashing(outer_message, SHA256_BLOCK_SIZE + SHA256_DIGEST_LEN, false);
+    uint8_t *hmac = (uint8_t *)sha256_hashing((char *)outer_message, SHA256_BLOCK_SIZE + SHA256_DIGEST_LEN, false);
     if (!hmac)
         return (ft_printf("ft_ssl: Error: Memory error\n"), free(k), free(inner_key), free(outer_key), free(inner_message), free(inner_hash), free(outer_message), NULL);
 
@@ -63,18 +64,17 @@ char *hmac_hash256(char *message, size_t message_len, char *key, size_t key_len)
     return hmac;
 }
 
-static uint8_t *xor_blocks(uint8_t *src1, uint8_t *src2, size_t len)
-{
-    uint8_t *dest = ft_calloc(len, sizeof(uint8_t));
-    if (!dest)
-        return NULL;
-    for (size_t i = 0; i < len; i++)
-    {
-        dest[i] = src1[i] ^ src2[i];
-    }
-    return dest;
-}
-
+// static uint8_t *xor_blocks(uint8_t *src1, uint8_t *src2, size_t len)
+// {
+//     uint8_t *dest = ft_calloc(len, sizeof(uint8_t));
+//     if (!dest)
+//         return NULL;
+//     for (size_t i = 0; i < len; i++)
+//     {
+//         dest[i] = src1[i] ^ src2[i];
+//     }
+//     return dest;
+// }
 
 // Return a derived key of length 8 bytes (64 bits)
 // iterations is the expected output len in bytes
@@ -83,51 +83,50 @@ uint8_t *pbkdf2(const char *password, size_t password_len, const char *salt, siz
 {
     u_int8_t    *result = NULL;
     size_t      block_count = dklen / hlen + (dklen % hlen != 0);
-    uint8_t     t[hlen][block_count];
+    uint8_t     t[block_count][hlen];
 
     for (size_t i = 0; i < block_count; i++)
     {
         // U1 = PRF(Password, Salt+INT_32_BE(i))
-        uint32_t    be_int = __builtin_bswap32((uint32_t)i);
+        // Block counter starts at 1, not 0
+        uint32_t    be_int = __builtin_bswap32((uint32_t)(i + 1));
         uint8_t     *hmac_key = (uint8_t *)mem_join((char *)salt, salt_len, (char *)&be_int, 4);
+        printf("Salt: ");
+        for (size_t x = 0; x < salt_len; x++)
+            printf("%02x", (uint8_t)salt[x]);
+        printf("\n");
+
+        printf("be_int = 0x%08x\n", be_int);
+
+        printf("hmac_key (%zu bytes): ", salt_len + 4);
+        for (size_t x = 0; x < salt_len + 4; x++)
+            printf("%02x", hmac_key[x]);
+        printf("\n");
+
         if (!hmac_key)
             return (NULL);
 
-        uint8_t     *u = (uint8_t *)hash_func((char *)password, password_len, (char *)hmac_key, salt_len + 4);
-        printf("u(string) = %s\n", (char *)u);
-
-
+        uint8_t     *u = hash_func(hmac_key, salt_len + 4, (uint8_t *)password, password_len);
         free(hmac_key);
         if (!u)
             return (NULL);
 
-        ft_memset(t[i], 0, hlen);
-
-        printf("U_1[%zu] = ", i);
-        for (size_t x = 0; x < hlen; x++)
-            printf("%02x", u[x]);
-        printf("\n");
+        // Init Ti = U1
+        ft_memcpy(t[i], u, hlen);
         
-        // Uc = PRF(Password, Uc-1)
         for (size_t j = 1; j < iter; j++)
         {
             uint8_t *prev_u = u;
-            u = (uint8_t *)hash_func((char *)password, password_len, (char *)prev_u, salt_len + 4);
-            if (!u)
-                return (free(prev_u), NULL);
-
-            uint8_t *tmp_u = u;
-            u = xor_blocks(tmp_u, prev_u, hlen);
-            if (!u)
-                return (free(prev_u), free(tmp_u), NULL);
-
+            u = hash_func(prev_u, hlen, (uint8_t *)password, password_len);
             free(prev_u);
-            free(tmp_u);
+            if (!u)
+                return (NULL);
+
+            // Ti = u1 ^ u2 ^ ... ^ uiter
+            for (size_t k = 0; k < hlen; k++)
+                t[i][k] ^= u[k];
         }
-        // for (size_t x = 0; x < dklen; x++)
-        //     printf("%02x", u[x]);
-        // printf("\n");
-        ft_memcpy(t[i], u, hlen);
+
         free(u);
     }
     // DK = T1 + T2 +....+ TdkLen/hlen
@@ -155,13 +154,19 @@ uint8_t *pbkdf2(const char *password, size_t password_len, const char *salt, siz
     if (!dk)
         return (free(result), NULL);
 
+    printf("resu;lt = ");
+    for (size_t x = 0; x < block_count * hlen; x++)
+        printf("%02x", (uint8_t)result[x]);
+    printf("\n");
+
     ft_memcpy(dk, result, dklen);
     free(result);
 
-    // printf("Derived key = ");
-    // for (size_t x = 0; x < dklen; x++)
-    //     printf("%02x", (uint8_t)dk[x]);
-    // printf("\n");
+    printf("Derived key = ");
+    for (size_t x = 0; x < dklen; x++)
+        printf("%02x", (uint8_t)dk[x]);
+    printf("\n");
+
 
     return dk;
 }

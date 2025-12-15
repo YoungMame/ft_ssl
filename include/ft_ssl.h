@@ -101,8 +101,8 @@ char    *read_fd(int fd, size_t *out_size);
 char *mem_join(char *s1, size_t len1, char *s2, size_t len2);
 
 // key derivation pbkdf2
-typedef char *(*t_pbkdf2_prf)(char *, size_t, char *, size_t);
+typedef uint8_t *(*t_pbkdf2_prf)(uint8_t *, size_t, uint8_t *, size_t);
 
 uint8_t *pbkdf2(const char *password, size_t password_len, const char *salt, size_t salt_len, t_pbkdf2_prf hash_func, size_t hlen, size_t iter, size_t dklen);
 
-char *hmac_hash256(char *message, size_t message_len, char *key, size_t key_len);
+uint8_t *hmac_hash256(uint8_t *message, size_t message_len, uint8_t *key, size_t key_len);

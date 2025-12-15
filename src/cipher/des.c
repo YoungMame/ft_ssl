@@ -339,7 +339,7 @@ int des(t_ssl_command *command)
     {
         if (!params.password)
             return (free_params_des(params), ft_printf("ft_ssl: Error: No key or password provided\n"), 0);
-        uint8_t *generated_key = pbkdf2((const char *)params.password, ft_strlen(params.password), (const char *)params.salt, ft_strlen(params.salt), hmac_hash256, 32, 10000, 8);
+        uint8_t *generated_key = pbkdf2((const char *)params.password, ft_strlen(params.password), (const char *)params.salt, ft_strlen(params.salt), hmac_hash256, 32, 1000, 8);
         if (!generated_key)
             return (free_params_des(params), 0);
         for (int i = 0; i < 8; i++)
