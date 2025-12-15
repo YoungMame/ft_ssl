@@ -56,10 +56,10 @@ uint8_t *hmac_hash256(uint8_t *message, size_t message_len, uint8_t *key, size_t
     free(inner_message);
     free(inner_hash);
     free(outer_message);
-    printf("HMAC: ");
-    for (size_t x = 0; x < SHA256_DIGEST_LEN; x++)
-        printf("%02x", (uint8_t)hmac[x]);
-    printf("\n");
+    // printf("HMAC: ");
+    // for (size_t x = 0; x < SHA256_DIGEST_LEN; x++)
+    //     printf("%02x", (uint8_t)hmac[x]);
+    // printf("\n");
     return hmac;
 }
 
@@ -90,17 +90,6 @@ uint8_t *pbkdf2(const char *password, size_t password_len, const char *salt, siz
         // Block counter starts at 1, not 0
         uint32_t    be_int = __builtin_bswap32((uint32_t)(i + 1));
         uint8_t     *hmac_key = (uint8_t *)mem_join((char *)salt, salt_len, (char *)&be_int, 4);
-        printf("Salt: ");
-        for (size_t x = 0; x < salt_len; x++)
-            printf("%02x", (uint8_t)salt[x]);
-        printf("\n");
-
-        printf("be_int = 0x%08x\n", be_int);
-
-        printf("hmac_key (%zu bytes): ", salt_len + 4);
-        for (size_t x = 0; x < salt_len + 4; x++)
-            printf("%02x", hmac_key[x]);
-        printf("\n");
 
         if (!hmac_key)
             return (NULL);
@@ -153,22 +142,19 @@ uint8_t *pbkdf2(const char *password, size_t password_len, const char *salt, siz
     if (!dk)
         return (free(result), NULL);
 
-    printf("resu;lt = ");
-    for (size_t x = 0; x < block_count * hlen; x++)
-        printf("%02x", (uint8_t)result[x]);
-    printf("\n");
-
     ft_memcpy(dk, result, dklen);
     free(result);
 
-    printf("Derived key = ");
-    for (size_t x = 0; x < dklen; x++)
-        printf("%02x", (uint8_t)dk[x]);
-    printf("\n");
-
-
+    // printf("Derived key = ");
+    // for (size_t x = 0; x < dklen; x++)
+    //     printf("%02x", (uint8_t)dk[x]);
+    // printf("\n");
     return dk;
 }
 
-// ./ft_ssl des-ecb -i test/files/text -p passphrase42 -s 0C871EEA3AF7AAAA
-// openssl des-ecb -pbkdf2 -iter 10000 -in test/files/text -k passphrase42 -S 0C871EEA3AF7AAAA -provider legacy -provider default -P
+// ./ft_ssl des-ecb -i test/files/text -p passphrase42 -s 0C871EEA3AF7AAAA -P
+// openssl des-ecb -pbkdf2 -iter 1000 -in test/files/text -k passphrase42 -S 0C871EEA3AF7AAAA -provider legacy -provider default -P
+
+// ./ft_ssl des-ecb -i test/files/image.png -o test/files/.out/image.png.enc -p MySecretPassword -s 0C871EEA3AF7AAAA -P
+
+// openssl des-ecb -pbkdf2 -iter 1000 -in test/files/image.png -out test/files/.out/image_ossl.png.enc -k MySecretPassword -S 0C871EEA3AF7AAAA -p -provider default -provider legacy

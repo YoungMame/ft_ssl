@@ -317,7 +317,7 @@ static uint64_t *des_ecb(uint64_t *blocks, int block_count, uint64_t *subkeys, b
 
 int des(t_ssl_command *command)
 {
-    t_des_params   params = des_process_command_flags(command);
+    t_des_params    params = des_process_command_flags(command);
     int             success = des_process_command_inputs(command, params);
     if (!success)
         return (0);
@@ -339,7 +339,7 @@ int des(t_ssl_command *command)
     {
         if (!params.password)
             return (free_params_des(params), ft_printf("ft_ssl: Error: No key or password provided\n"), 0);
-        uint8_t *generated_key = pbkdf2((const char *)params.password, ft_strlen(params.password), (const char *)params.salt, ft_strlen(params.salt), hmac_hash256, 32, 1000, 8);
+        uint8_t         *generated_key = pbkdf2((const char *)params.password, ft_strlen(params.password), (const char *)params.salt, ft_strlen(params.salt), hmac_hash256, 32, 1000, 8);
         if (!generated_key)
             return (free_params_des(params), 0);
         for (int i = 0; i < 8; i++)
@@ -377,6 +377,33 @@ int des(t_ssl_command *command)
     //     pbin8(command->messages[0].output[i]);
     // }
     // printf("\n");
+    if (params.show_key)
+    {
+        if (key_numeric)
+        {
+            char *key_hex = ft_itoa_base_unsigned64(key_numeric, "0123456789ABCDEF", 16);
+            if (!key_hex)
+                return (ft_printf("ft_ssl: Error: Memory Error\n"), free_params_des(params), 0);
+            ft_printf("KEY: %s\n", key_hex);
+            free(key_hex);
+        }
+        if (params.salt)
+        {
+            char *salt_hex = ft_itoa_base_unsigned64(ft_atoi_base64(params.salt, "0123456789ABCDEF"), "0123456789ABCDEF", 16);
+            if (!salt_hex)
+                return (ft_printf("ft_ssl: Error: Memory Error\n"), free_params_des(params), 0);
+            ft_printf("SALT: %s\n", salt_hex);
+            free(salt_hex);
+        }
+        if (params.iv)
+        {
+            char *iv_hex = ft_itoa_base_unsigned64(ft_atoi_base64(params.iv, "0123456789ABCDEF"), "0123456789ABCDEF", 16);
+            if (!iv_hex)
+                return (ft_printf("ft_ssl: Error: Memory Error\n"), free_params_des(params), 0);
+            ft_printf("IV: %s\n", iv_hex);
+            free(iv_hex);
+        }
+    }
 
     des_output_messages(command, params, "des");
 

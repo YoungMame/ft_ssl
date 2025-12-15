@@ -13,6 +13,7 @@ typedef struct s_des_params {
     char    *password;
     char    *salt;
     char    *iv;
+    bool    show_key;
 }   t_des_params;
 
 typedef struct s_ssl_command t_ssl_command;

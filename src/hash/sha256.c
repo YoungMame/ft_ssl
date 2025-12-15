@@ -268,7 +268,7 @@ int sha256(t_ssl_command *command) {
 
     for (size_t i = 0; i < command->message_count; i++)
     {
-        char    *output = sha256_hashing(command->messages[i].content, command->messages[i].content_size, false);
+        char    *output = sha256_hashing(command->messages[i].content, command->messages[i].content_size, true);
         if (!output)
             return (0);
         command->messages[i].output = output;

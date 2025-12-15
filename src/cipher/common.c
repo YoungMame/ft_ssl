@@ -224,6 +224,10 @@ t_des_params   des_process_command_flags(t_ssl_command *command)
                 params.iv[j] = (char)byte;
             }
         }
+        else if (command->flags[i].index == 9)
+        {
+            params.show_key = true;
+        }
     }
     return (params);
 }

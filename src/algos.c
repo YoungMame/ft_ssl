@@ -22,9 +22,9 @@ static const char *base64_descriptions[] = {
     NULL
 };
 
-static const char *des_options[] = { "-a", "-d", "-e", "-i", "-o", "-k", "-p", "-s", "-v", NULL };
-static const char *des_options_long[] = { NULL, "--decode", "--encode", "--input", "--output", "--key", "--password", "--salt", "--initialization-vector", NULL };
-static const char *des_args[] = { NULL, NULL, NULL, "<file>", "<file>", "<key>", "<password>", "<salt>", "<iv>", NULL };
+static const char *des_options[] = { "-a", "-d", "-e", "-i", "-o", "-k", "-p", "-s", "-v", "-P", NULL };
+static const char *des_options_long[] = { NULL, "--decode", "--encode", "--input", "--output", "--key", "--password", "--salt", "--initialization-vector", "--show-key", NULL };
+static const char *des_args[] = { NULL, NULL, NULL, "<file>", "<file>", "<key>", "<password>", "<salt>", "<iv>", NULL, NULL };
 static const char *des_descriptions[] = {
     "decode/encode the input/output in base64, depending on the encrypt mode",
     "decrypt mode",
@@ -35,6 +35,7 @@ static const char *des_descriptions[] = {
     "the password in ASCII is the next argument",
     "the salt in hex is the next argument",
     "initialization vector in hex is the next argument",
+    "print the key, iv and salt used",
     NULL
 };
 
@@ -105,7 +106,7 @@ t_ssl_algo g_ssl_algos[SSL_MODE_COUNT] = {
     {
         .name = "des",
         .f = des,
-        .nb_options = 9,
+        .nb_options = 11,
         .options = des_options,
         .options_long = des_options_long,
         .args = des_args,
@@ -115,7 +116,7 @@ t_ssl_algo g_ssl_algos[SSL_MODE_COUNT] = {
     {
         .name = "des-ecb",
         .f = des,
-        .nb_options = 9,
+        .nb_options = 11,
         .options = des_options,
         .options_long = des_options_long,
         .args = des_args,

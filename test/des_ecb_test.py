@@ -16,9 +16,9 @@ def build_encode_decode_cross_test(test_file, test_out_file, test_decrypted_file
            ["./ft_ssl", "des-ecb", "-i", test_out_file + "_openssl", "-o", test_decrypted_file + "_ft_ssl", "-k", key], \
            ["openssl", "des-ecb", "-in", test_out_file + "_ft_ssl", "-out", test_decrypted_file + "_openssl", "-K", key, "-provider", "default", "-provider", "legacy"]
 
-def build_file_password_salt_test(test_file, password, salt):
-    return ["./ft_ssl", "des-ecb", "-i", test_file, "-p", password, "-s", salt], \
-           ["openssl", "des-ecb", '-pbkdf2', "-in", test_file, "-k", password, "-S", salt, "-provider", "default", "-provider", "legacy"]
+def build_file_password_salt_test(test_file, out_file, password, salt):
+    return ["./ft_ssl", "des-ecb", "-i", test_file, "-o", out_file + "_ft_ssl", "-p", password, "-s", salt], \
+           ["openssl", "des-ecb", '-pbkdf2', "-iter", "1000", "-in", test_file, "-out", out_file + "_openssl", "-k", password, "-S", salt, "-provider", "default", "-provider", "legacy"]
 
 file_tests = [
     [ "test/files/binary", "0C871EEA3AF7AAAA" ],
@@ -39,9 +39,9 @@ encode_decode_cross_tests = [
 ]
 
 file_tests_password_salt = [
-    [ "test/files/binary", "MySecretPassword", "0C871EEA3AF7AAAA" ],
-    [ "test/files/text", "MySecretPassword", "0C871EEA3AF7AAAA" ],
-    [ "test/files/image.png", "MySecretPassword", "0C871EEA3AF7AAAA" ],
+    [ "test/files/binary", "test/files/.out/des_ecb_test_pbkdf2.enc",  "MySecretPassword", "0C871EEA3AF7AAAA" ],
+    [ "test/files/text", "test/files/.out/des_ecb_test_pbkdf2.enc", "MySecretPassword", "0C871EEA3AF7AAAA" ],
+    [ "test/files/image.png", "test/files/.out/des_ecb_test_pbkdf2.enc", "MySecretPassword", "0C871EEA3AF7AAAA" ],
 ]
 
 def run_cmd(cmd):
@@ -81,8 +81,8 @@ def run_cmd_pair(array):
         print("Output mismatch:");
         print("Cmd 1:", " ".join(array[0]));
         print("Cmd 2:", " ".join(array[1]));
-        print("Output 1:", out1);
-        print("Output 2:", out2);
+        # print("Output 1:", out1);
+        # print("Output 2:", out2);
         return 0;
     return 1;
 
@@ -134,8 +134,8 @@ def tests():
             sys.exit(1)
         else:
             print("Test des-ecb encode-decode cross passed for file:", test_file);
-    for test_file, password, salt in file_tests_password_salt:
-        if not run_cmd_pair(build_file_password_salt_test(test_file, password, salt)):
+    for test_file, out_file, password, salt in file_tests_password_salt:
+        if not run_cmd_out_pair(build_out_file_test(test_file, out_file, password, salt)):
             print("Test failed for file:", test_file)
             sys.exit(1)
         else:
