@@ -66,10 +66,29 @@ static char    *append_h(char *hash, uint32_t value)
     return (str);
 }
 
-// Append each hash values that result in hexadecimal format
-static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t h3, uint32_t h4, uint32_t h5, uint32_t h6, uint32_t h7)
+static char     *append_h_no_string(char *hash, size_t current_len, uint32_t value)
 {
-    char *digest = ft_calloc(257, sizeof(char));
+    char *s_value = ft_calloc(4, sizeof(char));
+    if (!s_value)
+        return (ft_printf("ft_ssl: Error: Memory error\n"), NULL);
+
+    for (uint8_t i = 0; i < 4; i++)
+    {
+        s_value[i] = (char)((value >> (8 * (3 - i))) & 0xFF);
+    }
+    
+    char *str = mem_join(hash, current_len, s_value, 4);
+    if (!str)
+        return (ft_printf("ft_ssl: Error: Memory error\n"), free(s_value), NULL);
+
+    free(s_value);
+    return (str);
+}
+
+// Append each hash values that result in hexadecimal format
+static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t h3, uint32_t h4, uint32_t h5, uint32_t h6, uint32_t h7, bool is_string)
+{
+    char *digest = ft_calloc(32, sizeof(char));
     if (!digest)
         return NULL;
     digest[0] = '\0';
@@ -77,7 +96,13 @@ static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t
     uint32_t values[8] = {h0, h1, h2, h3, h4, h5, h6, h7};
     for (int i = 0; i < 8; i++)
     {
-        char *tmp = append_h(digest, values[i]);
+        char *tmp = NULL;
+
+        if (is_string)
+            tmp = append_h(digest, values[i]);
+        else
+            tmp = append_h_no_string(digest, i * 4, values[i]);
+
         if (!tmp)
         {
             free(digest);
@@ -96,7 +121,7 @@ static char    *final_hash_value(uint32_t h0, uint32_t h1, uint32_t h2, uint32_t
 // Using the preprocessed message, process it in 512-bit chunks
 // Break message into 512-bit chunks
 // Break each chunk into sixteen 32-bit words
-char *sha256_hashing(char *message, size_t message_len) {
+char *sha256_hashing(char *message, size_t message_len, bool is_string) {
     char *preproc_message;
     size_t total_len;
     uint32_t *K;
@@ -225,7 +250,7 @@ char *sha256_hashing(char *message, size_t message_len) {
 
 
     // Output the hash in hexadecimal format
-    char *digest = final_hash_value(h0, h1, h2, h3, h4, h5, h6, h7);
+    char *digest = final_hash_value(h0, h1, h2, h3, h4, h5, h6, h7, is_string);
     if (!digest)
         return (free(preproc_message), free(K), free_chunk(M, chunks_count), NULL);
 
@@ -243,7 +268,7 @@ int sha256(t_ssl_command *command) {
 
     for (size_t i = 0; i < command->message_count; i++)
     {
-        char    *output = sha256_hashing(command->messages[i].content, command->messages[i].content_size);
+        char    *output = sha256_hashing(command->messages[i].content, command->messages[i].content_size, false);
         if (!output)
             return (0);
         command->messages[i].output = output;

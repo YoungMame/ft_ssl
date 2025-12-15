@@ -6,12 +6,12 @@
 // HMAC = h ( (K ^ opad) ∥ h( (K ^ ipad) ∥ message ) )
 char *hmac_hash256(char *message, size_t message_len, char *key, size_t key_len)
 {
-    char ipad[SHA256_BLOCK_SIZE] = {0};
-    char opad[SHA256_BLOCK_SIZE] = {0};
+    char ipad[SHA256_BLOCK_SIZE];
+    char opad[SHA256_BLOCK_SIZE];
     char *k = NULL;
 
     if (key_len > SHA256_BLOCK_SIZE) {
-        k = sha256_hashing((char *)key, key_len);
+        k = sha256_hashing((char *)key, key_len, false);
         key_len = SHA256_DIGEST_LEN;
     }
     else {
@@ -39,7 +39,7 @@ char *hmac_hash256(char *message, size_t message_len, char *key, size_t key_len)
         return (ft_printf("ft_ssl: Error: Memory error\n"), free(k), free(inner_key), free(outer_key), NULL);
 
     // hashing inner message
-    char *inner_hash = sha256_hashing(inner_message, SHA256_BLOCK_SIZE + message_len);
+    char *inner_hash = sha256_hashing(inner_message, SHA256_BLOCK_SIZE + message_len, false);
     if (!inner_hash)
         return (ft_printf("ft_ssl: Error: Memory error\n"), free(k), free(inner_key), free(outer_key), free(inner_message), NULL);
 
@@ -49,7 +49,7 @@ char *hmac_hash256(char *message, size_t message_len, char *key, size_t key_len)
         return (ft_printf("ft_ssl: Error: Memory error\n"), free(k), free(inner_key), free(outer_key), free(inner_message), free(inner_hash), NULL);
 
     // final HMAC
-    char *hmac = sha256_hashing(outer_message, SHA256_BLOCK_SIZE + SHA256_DIGEST_LEN);
+    char *hmac = sha256_hashing(outer_message, SHA256_BLOCK_SIZE + SHA256_DIGEST_LEN, false);
     if (!hmac)
         return (ft_printf("ft_ssl: Error: Memory error\n"), free(k), free(inner_key), free(outer_key), free(inner_message), free(inner_hash), free(outer_message), NULL);
 
@@ -94,6 +94,8 @@ uint8_t *pbkdf2(const char *password, size_t password_len, const char *salt, siz
             return (NULL);
 
         uint8_t     *u = (uint8_t *)hash_func((char *)password, password_len, (char *)hmac_key, salt_len + 4);
+        printf("u(string) = %s\n", (char *)u);
+
 
         free(hmac_key);
         if (!u)
