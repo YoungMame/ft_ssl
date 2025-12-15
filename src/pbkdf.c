@@ -6,8 +6,6 @@
 // HMAC = h ( (K ^ opad) ∥ h( (K ^ ipad) ∥ message ) )
 uint8_t *hmac_hash256(uint8_t *message, size_t message_len, uint8_t *key, size_t key_len)
 {
-    uint8_t ipad[SHA256_BLOCK_SIZE];
-    uint8_t opad[SHA256_BLOCK_SIZE];
     uint8_t *k = NULL;
 
     if (key_len > SHA256_BLOCK_SIZE) {
@@ -21,20 +19,18 @@ uint8_t *hmac_hash256(uint8_t *message, size_t message_len, uint8_t *key, size_t
         ft_memcpy(k, key, key_len);
     }
 
-    for (size_t i = 0; i < SHA256_BLOCK_SIZE; i++) {
-        ipad[i] = k[i] ^ 0x36;
-        opad[i] = k[i] ^ 0x5c;
-    }
-
     uint8_t *inner_key = ft_calloc(SHA256_BLOCK_SIZE, sizeof(uint8_t));
     uint8_t *outer_key = ft_calloc(SHA256_BLOCK_SIZE, sizeof(uint8_t));
     if (!inner_key || !outer_key)
         return (ft_printf("ft_ssl: Error: Memory error\n"), free(k), NULL);
+
+    // xor keys with ipad and opad
     for (size_t i = 0; i < SHA256_BLOCK_SIZE; i++)
     {
-        inner_key[i] = k[i] ^ ipad[i];
-        outer_key[i] = k[i] ^ opad[i];
+        inner_key[i] = k[i] ^ 0x36;
+        outer_key[i] = k[i] ^ 0x5c;
     }
+
     uint8_t *inner_message = (uint8_t *)mem_join((char *)inner_key, SHA256_BLOCK_SIZE, (char *)message, message_len);
     if (!inner_message)
         return (ft_printf("ft_ssl: Error: Memory error\n"), free(k), free(inner_key), free(outer_key), NULL);
@@ -60,7 +56,10 @@ uint8_t *hmac_hash256(uint8_t *message, size_t message_len, uint8_t *key, size_t
     free(inner_message);
     free(inner_hash);
     free(outer_message);
-
+    printf("HMAC: ");
+    for (size_t x = 0; x < SHA256_DIGEST_LEN; x++)
+        printf("%02x", (uint8_t)hmac[x]);
+    printf("\n");
     return hmac;
 }
 
