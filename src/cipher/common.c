@@ -254,6 +254,7 @@ void    des_output_messages(t_ssl_command *command, t_des_params params, const c
         size_t j = 0;
         if (params.process_in_base64 && !params.decode)
         {
+            ft_printf("Encoding message %zu in base64\n", i);
             size_t outsize = 0;
             char *base64_decoded = base64_encode(command->messages[i].output, command->messages[i].output_size, &outsize);
             while (j < outsize)

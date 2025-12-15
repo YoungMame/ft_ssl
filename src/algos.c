@@ -123,4 +123,14 @@ t_ssl_algo g_ssl_algos[SSL_MODE_COUNT] = {
         .descriptions = des_descriptions,
         .noflag_as_file = false
     },
+    {
+        .name = "des-cbc",
+        .f = des,
+        .nb_options = 10,
+        .options = des_options,
+        .options_long = des_options_long,
+        .args = des_args,
+        .descriptions = des_descriptions,
+        .noflag_as_file = false
+    },
 };

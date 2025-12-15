@@ -13,8 +13,8 @@ def build_out_file_test(test_file, test_out_file, key):
 def build_encode_decode_cross_test(test_file, test_out_file, test_decrypted_file, key):
     return ["./ft_ssl", "des-ecb", "-i", test_file, "-o", test_out_file + "_ft_ssl", "-k", key], \
            ["openssl", "des-ecb", "-in", test_file, "-out", test_out_file + "_openssl", "-K", key, "-provider", "default", "-provider", "legacy"], \
-           ["./ft_ssl", "des-ecb", "-i", test_out_file + "_openssl", "-o", test_decrypted_file + "_ft_ssl", "-k", key], \
-           ["openssl", "des-ecb", "-in", test_out_file + "_ft_ssl", "-out", test_decrypted_file + "_openssl", "-K", key, "-provider", "default", "-provider", "legacy"]
+           ["./ft_ssl", "des-ecb", "-d", "-i", test_out_file + "_openssl", "-o", test_decrypted_file + "_ft_ssl", "-k", key], \
+           ["openssl", "des-ecb", "-d", "-in", test_out_file + "_ft_ssl", "-out", test_decrypted_file + "_openssl", "-K", key, "-provider", "default", "-provider", "legacy"]
 
 def build_file_password_salt_test(test_file, out_file, password, salt):
     return ["./ft_ssl", "des-ecb", "-i", test_file, "-o", out_file + "_ft_ssl", "-p", password, "-s", salt], \
@@ -23,6 +23,12 @@ def build_file_password_salt_test(test_file, out_file, password, salt):
 def build_pbkdf_test(password, salt):
     return ["./ft_ssl", "des-ecb", "-i", "test/files/text", "-p", password, "-s", salt, "-P"], \
            ["openssl", "des-ecb", '-pbkdf2', "-iter", "1000", "-in", "test/files/text", "-k", password, "-S", salt, "-P", "-provider", "default", "-provider", "legacy"]
+
+def build_base64_input_tests(input_file, key):
+    return ["./ft_ssl", "des-ecb", "-i", input_file, "-o", input_file + "ecb_base64_ft_ssl", "-k", key], \
+           ["openssl", "des-ecb", '-pbkdf2', "-iter", "1000", "-in", input_file, "-out", input_file + "ecb_base64_openssl", "-K", key, "-provider", "default", "-provider", "legacy"], \
+           ["./ft_ssl", "des-ecb", "-i", input_file + "ecb_base64_ft_ssl", "-k", key, "-d"], \
+           ["openssl", "des-ecb",'-pbkdf2', "-iter", "1000", "-in", input_file + "ecb_base64_openssl", "-K", key, "-provider", "default", "-provider", "legacy", "-d"], \
 
 file_tests = [
     # [ "test/files/binary", "0C871EEA3AF7AAAA" ],
@@ -57,7 +63,13 @@ pbkdf_tests = [
     [ "lonNNNNNNNNNNNNNNNNNNGGggggPaassss42gsduhgruiewhrewyiyghwreyghreitreiugh", "0C871EEA3AF7AAAA" ],
 ]
 
+base64_input_tests = [
+    [ "test/files/base64_encoded_test", "0C871EEA3AF7AAAA" ],
+]
+
+
 def run_cmd(cmd):
+    print("Running command:", " ".join(cmd));
     proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=False);
     return proc.stdout, proc.stderr;
 
@@ -125,6 +137,43 @@ def run_cmd_pair_x2(array):
 
     return 1;
 
+def run_cmd_pair_x2_base64(array):
+    out1a, err1a = run_cmd(array[0]);
+    out2a, err2a = run_cmd(array[1]);
+    if err1a or err2a:
+        print("Error during command execution:");
+        print("Cmd 1 stderr:", err1a.decode(errors="ignore"));
+        print("Cmd 2 stderr:", err2a.decode(errors="ignore"));
+        return 0;
+
+    filename1 = array[0][array[0].index("-o") + 1];
+    filename2 = array[1][array[1].index("-out") + 1];
+    print ("Comparing encoded files:", filename1, "and", filename2);
+    diff = run_cmd(["diff", filename1, filename2])[0];
+    if diff:
+        print("Output file mismatch: ", filename1, "and", filename2);
+        print("Diff output:", diff);
+        return 0;
+
+
+    out1b, err1b = run_cmd(array[2]);
+    out2b, err2b = run_cmd(array[3]);
+    if err1b or err2b:
+        print("Error during command execution:");
+        print("Cmd 1 stderr:", err1b.decode(errors="ignore"));
+        print("Cmd 2 stderr:", err2b.decode(errors="ignore"));
+        return 0;
+
+    if out1b != out2b:
+        print("Decrypted output mismatch:");
+        print("Cmd 1:", " ".join(array[2]));
+        print("Cmd 2:", " ".join(array[3]));
+        print("Output 1:", out1b);
+        print("Output 2:", out2b);
+        return 0;
+
+    return 1;
+
 def tests():
     os.makedirs("test/files/.out", exist_ok=True);
     for test_file, key in file_tests:
@@ -145,18 +194,24 @@ def tests():
             sys.exit(1);
         else:
             print("Test des-ecb encode-decode cross passed for file:", test_file);
-    # for test_file, out_file, password, salt in file_tests_password_salt:
-    #     if not run_cmd_out_pair(build_file_password_salt_test(test_file, out_file, password, salt)):
-    #         print("Test failed for file:", test_file);
-    #         sys.exit(1);
-    #     else:
-    #         print("Test des-ecb passed for file:", test_file);
+    for test_file, out_file, password, salt in file_tests_password_salt:
+        if not run_cmd_out_pair(build_file_password_salt_test(test_file, out_file, password, salt)):
+            print("Test failed for file:", test_file);
+            sys.exit(1);
+        else:
+            print("Test des-ecb passed for file:", test_file);
     for password, salt in pbkdf_tests:
         if not run_cmd_pair(build_pbkdf_test(password, salt)):
             print("PBKDF test failed for password:", password, "salt:", salt);
             sys.exit(1);
         else:
             print("Test des-ecb PBKDF passed for password:", password, "salt:", salt);
+    for input_file, key in base64_input_tests:
+        if not run_cmd_pair_x2_base64(build_base64_input_tests(input_file, key)):
+            print("Base64 input test failed for file:", input_file);
+            sys.exit(1);
+        else:
+            print("Test des-ecb Base64 input passed for file:", input_file);
     print("All des-ecb tests passed.")
 
 if __name__ == "__main__":

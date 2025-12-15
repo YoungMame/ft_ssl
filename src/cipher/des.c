@@ -330,6 +330,37 @@ static uint64_t *des_ecb(uint64_t *blocks, int block_count, uint64_t *subkeys, b
     return (output);
 }
 
+static uint64_t *des_ecb(uint64_t *blocks, int block_count, uint64_t *subkeys, bool decrypt, char *iv)
+{
+    uint64_t *output = ft_calloc(block_count, sizeof(uint64_t));
+    if (!output)
+        return (NULL);
+
+    for (int i = 0; i < block_count; i++)
+    {
+        uint64_t ciphertext = des_encrypt_block(blocks[i], subkeys, decrypt);
+        // printf("Block %d ciphertext: ", i);
+        // pbin(ciphertext);
+        output[i] = ciphertext;
+    }
+    return (output);
+}
+
+// static uint64_t *des_cbc(uint64_t *blocks, int block_count, uint64_t *subkeys, bool decrypt)
+// {
+//     uint64_t *output = ft_calloc(block_count, sizeof(uint64_t));
+//     if (!output)
+//         return (NULL);
+
+//     for (int i = 0; i < block_count; i++)
+//     {
+//         uint64_t ciphertext = des_encrypt_block(blocks[i], subkeys, decrypt);
+//         // printf("Block %d ciphertext: ", i);
+//         // pbin(ciphertext);
+//         output[i] = ciphertext;
+//     }
+//     return (output);
+// }
 // ============================================ PER BLOCK //
 
 int des(t_ssl_command *command)
@@ -373,12 +404,19 @@ int des(t_ssl_command *command)
     uint64_t *blocks = des_allocate_chunks(command->messages[0].content, &blocks_count, command->messages[0].content_size, params.decode);
     if (!blocks) return (free_params_des(params), free(subkeys), 0);
 
-    uint64_t    *cipher = des_ecb(blocks, blocks_count, subkeys, params.decode);
+    uint64_t    *cipher = NULL;
+
+    if (command->mode == 7 || command->mode == 8) // des-ecb
+        cipher = des_ecb(blocks, blocks_count, subkeys, params.decode); 
+    else if (command->mode == 9) // des-cbc
+        cipher = des_cbc(blocks, blocks_count, subkeys, params.decode, params.iv);
+
     // printf("Cipher: ");
     // for (int i = 0; i < blocks_count; i++)
     // {
     //     printf("%s ", ft_itoa_base_unsigned64(cipher[i], "0123456789abcdef", 16));
     // }
+
     uint8_t *final = final_value(cipher, blocks_count, params.decode);
     if (!final)
         return (free(blocks), free(subkeys), free(cipher), free_params_des(params), 0);
