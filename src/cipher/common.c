@@ -161,6 +161,7 @@ t_des_params   des_process_command_flags(t_ssl_command *command)
     params.salt = NULL;
     params.iv = NULL;
     params.process_in_base64 = false;
+    params.show_key = false;
 
     for (int i = 0; i < command->flag_count; i++)
     {

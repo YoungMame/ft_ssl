@@ -31,56 +31,71 @@
 //     printf("\n");
 // }
 
-static int check_padding(uint64_t *blocks, int chunk_count)
-{
-    // get the last byte to get padding value
-    uint8_t padding_byte = (blocks[chunk_count - 1] >> 0) & 0xFF;
-    // printf("Padding byte detected: 0x%02x (%d)\n", padding_byte, padding_byte);
+// static int check_padding(uint64_t *blocks, int chunk_count)
+// {
+//     // get the last byte to get padding value
+//     uint8_t padding_byte = (blocks[chunk_count - 1] >> 0) & 0xFF;
+//     printf("Padding byte detected: 0x%02x (%d)\n", padding_byte, padding_byte);
 
-    if (padding_byte == 0 || padding_byte > 8)
-        return (-1);
+//     if (padding_byte == 0 || padding_byte > 8)
+//         return (-1);
 
-    bool valid_padding = true;
-    for (int i = 0; i < padding_byte && i < 8; i++) {
-        uint8_t byte = (blocks[chunk_count - 1] >> (i * 8)) & 0xFF;
-        if (byte != padding_byte) {
-            valid_padding = false;
-            break;
-        }
-    }
+//     bool valid_padding = true;
+//     for (int i = 0; i < padding_byte && i < 8; i++) {
+//         uint8_t byte = (blocks[chunk_count - 1] >> (i * 8)) & 0xFF;
+//         if (byte != padding_byte) {
+//             valid_padding = false;
+//             break;
+//         }
+//     }
 
-    if (!valid_padding)
-        return (-1);
+//     if (!valid_padding)
+//         return (-1);
     
-    return ((int)padding_byte);
+//     return ((int)padding_byte);
 
-}
+// }
 
 // Append each hash values that result in hexadecimal format
 static uint8_t    *final_value(uint64_t *blocks, int chunk_count, bool decrypt)
 {
-
-    // get the last byte to get padding value
-    int pad = 0;
-    if (decrypt)
-    {
-        pad = check_padding(blocks, chunk_count);
-        if (pad == -1)
-            return (ft_printf("ft_ssl: Error: Invalid padding\n"), NULL);
-    }
-
-    uint8_t *final = ft_calloc(chunk_count * 8 - (decrypt && (pad % 8 == 0)), sizeof(uint8_t));
+    // allocate buffer for final output
+    uint8_t *final = ft_calloc(chunk_count * 8, sizeof(uint8_t));
     if (!final)
         return (NULL);
 
-    for (int i = 0; i < chunk_count - (decrypt && (pad % 8 == 0)); i++)
+    // get all bytes from each 64-bit block
+    for (int i = 0; i < chunk_count; i++)
     {
-        for (int j = 0; j < 8 - (decrypt ? pad % 8 : 0); j++)
+        for (int j = 0; j < 8; j++)
         {
             uint8_t byte = (blocks[i] >> ((7 - j) * 8)) & 0xFF;
             final[i * 8 + j] = byte;
         }
     }
+
+    size_t total_size = (size_t)chunk_count * 8;
+
+    // remove padding if decrypting
+    if (decrypt && total_size > 0)
+    {
+        uint8_t pad = final[total_size - 1];
+        if (pad >= 1 && pad <= 8)
+        {
+            bool valid = true;
+            for (size_t i = 0; i < pad; i++)
+            {
+                if (final[total_size - 1 - i] != pad)
+                {
+                    valid = false;
+                    break;
+                }
+            }
+            if (valid)
+                total_size -= pad;
+        }
+    }
+
     return (final);
 }
 
@@ -196,10 +211,7 @@ static uint32_t des_round_function(uint32_t *left, uint32_t *right, uint64_t sub
 {
     // store result
     uint32_t tmp = *right;
-
-    // Function F
     uint64_t expanded = expansion_permutation(*right);
-    (void)subkey;
     expanded ^= subkey;
     *right = keyed_substitution(expanded);
     *right = permutation(*right);
@@ -237,14 +249,21 @@ static uint64_t final_permutation(uint64_t block)
 
 static uint64_t des_encrypt_block(uint64_t plaintext, uint64_t *subkeys, bool decrypt)
 {
+    uint64_t    reversed_subkeys[16];
+
     if (decrypt)
     {
-        uint64_t reversed_subkeys[16];
         for (int i = 0; i < 16; i++)
         {
             reversed_subkeys[i] = subkeys[15 - i];
         }
-        subkeys = reversed_subkeys;
+    }
+    else
+    {
+        for (int i = 0; i < 16; i++)
+        {
+            reversed_subkeys[i] = subkeys[i];
+        }
     }
 
     plaintext = initial_permutation(plaintext);
@@ -254,7 +273,7 @@ static uint64_t des_encrypt_block(uint64_t plaintext, uint64_t *subkeys, bool de
 
     for (int round = 0; round < 16; round++)
     {
-        des_round_function(&left, &right, subkeys[round]);
+        des_round_function(&left, &right, reversed_subkeys[round]);
         // printf("L%d: ", round + 1);
         // pbin32(left);
         // printf("R%d: ", round + 1);
@@ -269,8 +288,6 @@ static uint64_t des_encrypt_block(uint64_t plaintext, uint64_t *subkeys, bool de
     // pbin(plaintext);
     return plaintext;
 }
-
-// TODO : BUG : Padding is not removed correctly on decryption
 
 static uint64_t *des_allocate_chunks(char *message, int *chunk_count, size_t message_len, bool decrypt)
 {
@@ -339,13 +356,14 @@ int des(t_ssl_command *command)
     {
         if (!params.password)
             return (free_params_des(params), ft_printf("ft_ssl: Error: No key or password provided\n"), 0);
-        uint8_t         *generated_key = pbkdf2((const char *)params.password, ft_strlen(params.password), (const char *)params.salt, ft_strlen(params.salt), hmac_hash256, 32, 1000, 8);
+        uint8_t         *generated_key = pbkdf2((const char *)params.password, ft_strlen(params.password), (const char *)params.salt, 8, hmac_hash256, 32, 1000, 8);
         if (!generated_key)
             return (free_params_des(params), 0);
         for (int i = 0; i < 8; i++)
         {
             key_numeric = (key_numeric << 8) | generated_key[i];
         }
+        free(generated_key);
     }
     uint64_t *subkeys = des_key_schedule(key_numeric);
     if (!subkeys)
@@ -370,7 +388,28 @@ int des(t_ssl_command *command)
     free(cipher);
 
     command->messages[0].output = (char *)final;
-    command->messages[0].output_size = blocks_count * 8;
+
+    // trim output if decoding
+    size_t actual_size = (size_t)blocks_count * 8;
+    if (params.decode && actual_size > 0)
+    {
+        uint8_t pad = final[actual_size - 1];
+        if (pad >= 1 && pad <= 8)
+        {
+            bool valid = true;
+            for (size_t i = 0; i < pad; i++)
+            {
+                if (final[actual_size - 1 - i] != pad)
+                {
+                    valid = false;
+                    break;
+                }
+            }
+            if (valid)
+                actual_size -= pad;
+        }
+    }
+    command->messages[0].output_size = actual_size;
 
     // for (size_t i = 0; i < command->messages[0].output_size; i++)
     // {
@@ -379,33 +418,36 @@ int des(t_ssl_command *command)
     // printf("\n");
     if (params.show_key)
     {
+        if (params.salt)
+        {
+            ft_printf("salt=");
+            for (int i = 0; i < 8; i++)
+            {
+                char *salt_hex = ft_itoa_base_unsigned8((uint8_t)params.salt[i], "0123456789ABCDEF", 2);
+                ft_printf("%s" ,salt_hex);
+                free(salt_hex);
+            }
+            ft_printf("\n");
+        }
         if (key_numeric)
         {
             char *key_hex = ft_itoa_base_unsigned64(key_numeric, "0123456789ABCDEF", 16);
             if (!key_hex)
                 return (ft_printf("ft_ssl: Error: Memory Error\n"), free_params_des(params), 0);
-            ft_printf("KEY: %s\n", key_hex);
+            ft_printf("key=%s\n", key_hex);
             free(key_hex);
-        }
-        if (params.salt)
-        {
-            char *salt_hex = ft_itoa_base_unsigned64(ft_atoi_base64(params.salt, "0123456789ABCDEF"), "0123456789ABCDEF", 16);
-            if (!salt_hex)
-                return (ft_printf("ft_ssl: Error: Memory Error\n"), free_params_des(params), 0);
-            ft_printf("SALT: %s\n", salt_hex);
-            free(salt_hex);
         }
         if (params.iv)
         {
             char *iv_hex = ft_itoa_base_unsigned64(ft_atoi_base64(params.iv, "0123456789ABCDEF"), "0123456789ABCDEF", 16);
             if (!iv_hex)
                 return (ft_printf("ft_ssl: Error: Memory Error\n"), free_params_des(params), 0);
-            ft_printf("IV: %s\n", iv_hex);
+            ft_printf("iv=%s\n", iv_hex);
             free(iv_hex);
         }
     }
-
-    des_output_messages(command, params, "des");
+    else
+        des_output_messages(command, params, "des");
 
     free_params_des(params);
     

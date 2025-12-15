@@ -8,16 +8,10 @@ uint8_t *hmac_hash256(uint8_t *message, size_t message_len, uint8_t *key, size_t
 {
     uint8_t *k = NULL;
 
-    if (key_len > SHA256_BLOCK_SIZE) {
-        k = (uint8_t *)sha256_hashing((char *)key, key_len, false);
-        key_len = SHA256_DIGEST_LEN;
-    }
-    else {
-        k = ft_calloc(SHA256_BLOCK_SIZE, sizeof(uint8_t));
-        if (!k)
-            return (ft_printf("ft_ssl: Error: Memory error\n"), NULL);
-        ft_memcpy(k, key, key_len);
-    }
+    k = ft_calloc(SHA256_BLOCK_SIZE, sizeof(uint8_t));
+    if (!k)
+        return (ft_printf("ft_ssl: Error: Memory error\n"), NULL);
+    ft_memcpy(k, key, key_len);
 
     uint8_t *inner_key = ft_calloc(SHA256_BLOCK_SIZE, sizeof(uint8_t));
     uint8_t *outer_key = ft_calloc(SHA256_BLOCK_SIZE, sizeof(uint8_t));
@@ -83,6 +77,20 @@ uint8_t *pbkdf2(const char *password, size_t password_len, const char *salt, siz
     u_int8_t    *result = NULL;
     size_t      block_count = dklen / hlen + (dklen % hlen != 0);
     uint8_t     t[block_count][hlen];
+    uint8_t     *pass_digest = NULL;
+
+    if (password_len > SHA256_BLOCK_SIZE)
+    {
+        pass_digest = (uint8_t *)sha256_hashing((char *)password, password_len, false);
+        password_len = SHA256_DIGEST_LEN;
+    }
+    else
+    {
+        pass_digest = (uint8_t *)ft_calloc(password_len + 1, sizeof(uint8_t));
+        if (!pass_digest)
+            return (ft_printf("ft_ssl: Error: Memory error\n"), NULL);
+        ft_memcpy(pass_digest, password, password_len);
+    }
 
     for (size_t i = 0; i < block_count; i++)
     {
@@ -92,12 +100,12 @@ uint8_t *pbkdf2(const char *password, size_t password_len, const char *salt, siz
         uint8_t     *hmac_key = (uint8_t *)mem_join((char *)salt, salt_len, (char *)&be_int, 4);
 
         if (!hmac_key)
-            return (NULL);
+            return (free(pass_digest), NULL);
 
-        uint8_t     *u = hash_func(hmac_key, salt_len + 4, (uint8_t *)password, password_len);
+        uint8_t     *u = hash_func(hmac_key, salt_len + 4, (uint8_t *)pass_digest, password_len);
         free(hmac_key);
         if (!u)
-            return (NULL);
+            return (free(pass_digest), free(u), NULL);
 
         // Init Ti = U1
         ft_memcpy(t[i], u, hlen);
@@ -105,10 +113,10 @@ uint8_t *pbkdf2(const char *password, size_t password_len, const char *salt, siz
         for (size_t j = 1; j < iter; j++)
         {
             uint8_t *prev_u = u;
-            u = hash_func(prev_u, hlen, (uint8_t *)password, password_len);
+            u = hash_func(prev_u, hlen, (uint8_t *)pass_digest, password_len);
             free(prev_u);
             if (!u)
-                return (NULL);
+                return (free(pass_digest), free(u), NULL);
 
             // Ti = u1 ^ u2 ^ ... ^ uiter
             for (size_t k = 0; k < hlen; k++)
@@ -121,7 +129,7 @@ uint8_t *pbkdf2(const char *password, size_t password_len, const char *salt, siz
 
     result = ft_calloc(hlen + 1, sizeof(uint8_t));
     if (!result)
-        return (NULL);
+        return (free(pass_digest), NULL);
 
     ft_memcpy(result, t[0], hlen);
 
@@ -132,13 +140,14 @@ uint8_t *pbkdf2(const char *password, size_t password_len, const char *salt, siz
         uint8_t *new_result = (uint8_t *)mem_join((char *)result, current_len, (char *)t[i], hlen);
         free(result);
         if (!new_result)
-            return (NULL);
+            return (free(pass_digest), NULL);
 
         result = new_result;
     }
 
     // extract right length
     uint8_t *dk = ft_calloc(dklen + 1, sizeof(uint8_t));
+    free(pass_digest);
     if (!dk)
         return (free(result), NULL);
 
@@ -152,9 +161,3 @@ uint8_t *pbkdf2(const char *password, size_t password_len, const char *salt, siz
     return dk;
 }
 
-// ./ft_ssl des-ecb -i test/files/text -p passphrase42 -s 0C871EEA3AF7AAAA -P
-// openssl des-ecb -pbkdf2 -iter 1000 -in test/files/text -k passphrase42 -S 0C871EEA3AF7AAAA -provider legacy -provider default -P
-
-// ./ft_ssl des-ecb -i test/files/image.png -o test/files/.out/image.png.enc -p MySecretPassword -s 0C871EEA3AF7AAAA -P
-
-// openssl des-ecb -pbkdf2 -iter 1000 -in test/files/image.png -out test/files/.out/image_ossl.png.enc -k MySecretPassword -S 0C871EEA3AF7AAAA -p -provider default -provider legacy

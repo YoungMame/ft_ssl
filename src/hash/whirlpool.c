@@ -83,7 +83,6 @@ static void mix_row(uint8_t row[8]) {
     for (int k = 0; k < 8; k++) {
         uint8_t result = 0;
         for (int j = 0; j < 8; j++) {
-            /* M indexed as M[row_index * 8 + col_index] */
             result ^= mul_byte(row[j], M[j * 8 + k]);
         }
         results[k] = result;
@@ -106,7 +105,6 @@ static void shift_columns(uint8_t _state[64]) {
         for (int row = 0; row < 8; row++)
             column[row] = _state[row * 8 + col];
         for (int row = 0; row < 8; row++)
-            /* rotate down by 'col' positions: new[row] = old[(row - col) mod 8] */
             _state[row * 8 + col] = column[(row - col + 8) % 8];
     }
 }
@@ -197,7 +195,6 @@ static char *whirlpool_hashing(char *message, size_t message_len) {
         for (int r = 1; r <= 10; ++r)
             key_expension(round_keys[r - 1], r);
 
-        /* chiffrement : state ^= K0 ; puis rounds avec K1..K10 */
         for (int i = 0; i < 64; ++i)
             state[i] ^= round_keys[0][i];
 

@@ -11,7 +11,9 @@ typedef struct s_des_params {
     int     output_fd;
     char    *key;
     char    *password;
+    size_t  password_len;
     char    *salt;
+    size_t  salt_len;
     char    *iv;
     bool    show_key;
 }   t_des_params;
