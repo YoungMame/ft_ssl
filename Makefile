@@ -50,12 +50,14 @@ fclean: clean
 re: fclean all
 
 test: all
+	python3 test/des_pcbc_test.py
 	python3 test/md5_test.py
 	python3 test/sha256_test.py
 	python3 test/base64_test.py
 	python3 test/des_ecb_test.py
 	python3 test/des_cbc_test.py
 	python3 test/des3_cbc_test.py
+	python3 test/des3_ecb_test.py
 
 .PHONY: all clean fclean re test
 

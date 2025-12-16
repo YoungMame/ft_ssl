@@ -368,6 +368,78 @@ static uint64_t *des_cbc(uint64_t *blocks, int block_count, uint64_t *subkeys, b
     return (output);
 }
 
+static uint64_t *des_pcbc(uint64_t *blocks, int block_count, uint64_t *subkeys, bool decrypt, char *iv)
+{
+    uint64_t *output = ft_calloc(block_count, sizeof(uint64_t));
+    if (!output)
+        return (NULL);
+    
+    uint64_t    prev_cipher;
+    prev_cipher = 0x0;
+    for (int j = 0; j < 8; j++)
+    {
+        prev_cipher = (prev_cipher << 8) | (uint8_t)iv[j];
+    }
+
+    for (int i = 0; i < block_count; i++)
+    {
+
+        uint64_t xor_result = blocks[i];
+        
+        if (!decrypt) // encode
+            xor_result ^= prev_cipher;
+
+        uint64_t ciphertext = des_encrypt_block(xor_result, subkeys, decrypt);
+
+        if (!decrypt) // encode
+        {
+            output[i] = ciphertext;
+            prev_cipher = ciphertext ^ blocks[i];
+        }
+        else // decode
+        {
+            output[i] = ciphertext ^ prev_cipher;
+            prev_cipher = blocks[i] ^ output[i];
+        }
+    }
+
+    return (output);
+}
+
+// cbc is a stream cipher mode so i will not edit my padding implementation for it
+
+// static uint64_t *des_cfb(uint64_t *blocks, int block_count, uint64_t *subkeys, bool decrypt, char *iv, size_t message_len)
+// {
+//     uint64_t *output = ft_calloc(block_count, sizeof(uint64_t));
+//     if (!output)
+//         return (NULL);
+    
+//     uint64_t    ciphertext;
+//     ciphertext = 0x0;
+//     for (int j = 0; j < 8; j++)
+//     {
+//         ciphertext = (ciphertext << 8) | (uint8_t)iv[j];
+//     }
+
+//     for (int i = 0; i < block_count; i++)
+//     {
+//         ciphertext = des_encrypt_block(ciphertext, subkeys, decrypt);
+//         if (!decrypt) // encode
+//         {
+//             uint64_t xor_result = blocks[i] ^ ciphertext;
+//             output[i] = xor_result;
+//             ciphertext = xor_result;
+//         }
+//         else // decode
+//         {
+//             output[i] = ciphertext ^  blocks[i];
+//             ciphertext =  blocks[i];
+//         }
+//     }
+
+//     return (output);
+// }
+
 static uint64_t *triple_des_cbc(uint64_t *blocks, int block_count, uint64_t *subkeys, bool decrypt, char *iv)
 {
     uint64_t *output = ft_calloc(block_count, sizeof(uint64_t));
@@ -437,11 +509,33 @@ static uint64_t *triple_des_ecb(uint64_t *blocks, int block_count, uint64_t *sub
     if (!output)
         return (NULL);
 
+    uint64_t   k1[16];
+    uint64_t   k2[16];
+    uint64_t   k3[16];
+
+    for (int i = 0; i < 16; i++)
+    {
+        k1[i] = subkeys[i];
+        k2[i] = subkeys[i + 16];
+        k3[i] = subkeys[i + 32];
+    }
+
     for (int i = 0; i < block_count; i++)
     {
-        uint64_t ciphertext = des_encrypt_block(blocks[i], subkeys, decrypt);
-        ciphertext = des_encrypt_block(ciphertext, subkeys + 16, !decrypt);
-        ciphertext = des_encrypt_block(ciphertext, subkeys + 32, decrypt);
+        uint64_t ciphertext = blocks[i];
+
+        if (!decrypt)
+        {
+            ciphertext = des_encrypt_block(ciphertext, k1, false); // E
+            ciphertext = des_encrypt_block(ciphertext, k2, true);  // D
+            ciphertext = des_encrypt_block(ciphertext, k3, false); // E
+        }
+        else
+        {
+            ciphertext = des_encrypt_block(ciphertext, k3, true);  // D
+            ciphertext = des_encrypt_block(ciphertext, k2, false); // E
+            ciphertext = des_encrypt_block(ciphertext, k1, true);  // D
+        }
         
         // printf("Block %d ciphertext: ", i);
         // pbin(ciphertext);
@@ -449,8 +543,6 @@ static uint64_t *triple_des_ecb(uint64_t *blocks, int block_count, uint64_t *sub
     }
     return (output);
 }
-
-
 
 // ============================================ PER BLOCK //
 
@@ -535,6 +627,10 @@ int des(t_ssl_command *command)
         cipher = triple_des_cbc(blocks, blocks_count, subkeys, params.decode, params.iv);
     else if (command->mode == 11) // des3-ecb
         cipher = triple_des_ecb(blocks, blocks_count, subkeys, params.decode);
+    else if (command->mode == 12) // des-des_pcbc
+        cipher = des_pcbc(blocks, blocks_count, subkeys, params.decode, params.iv);
+    // else if (command->mode == 13) // des3-cfb
+    //     cipher = des_cfb(blocks, blocks_count, subkeys, params.decode, params.iv);
     // printf("Cipher: ");
     // for (int i = 0; i < blocks_count; i++)
     // {
