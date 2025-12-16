@@ -24,11 +24,11 @@ def build_pbkdf_test(password, salt):
     return ["./ft_ssl", "des-ecb", "-i", "test/files/text", "-p", password, "-s", salt, "-P"], \
            ["openssl", "des-ecb", '-pbkdf2', "-iter", "1000", "-in", "test/files/text", "-k", password, "-S", salt, "-P", "-provider", "default", "-provider", "legacy"]
 
-def build_base64_input_tests(input_file, key):
-    return ["./ft_ssl", "des-ecb", "-i", input_file, "-o", input_file + "ecb_base64_ft_ssl", "-k", key], \
-           ["openssl", "des-ecb", '-pbkdf2', "-iter", "1000", "-in", input_file, "-out", input_file + "ecb_base64_openssl", "-K", key, "-provider", "default", "-provider", "legacy"], \
-           ["./ft_ssl", "des-ecb", "-i", input_file + "ecb_base64_ft_ssl", "-k", key, "-d"], \
-           ["openssl", "des-ecb",'-pbkdf2', "-iter", "1000", "-in", input_file + "ecb_base64_openssl", "-K", key, "-provider", "default", "-provider", "legacy", "-d"], \
+def build_base64_input_tests(input_file, key, outfile):
+    return ["./ft_ssl", "des-ecb", "-i", input_file, "-o", outfile + "_ft_ssl", "-k", key, "-a"], \
+           ["openssl", "des-ecb", '-pbkdf2', "-iter", "1000", "-in", input_file, "-out", outfile + "_openssl", "-K", key, "-provider", "default", "-provider", "legacy", "-a"], \
+           ["./ft_ssl", "des-ecb", "-i", outfile + "_openssl", "-k", key, "-d", "-a"], \
+           ["openssl", "des-ecb",'-pbkdf2', "-iter", "1000", "-in", outfile + "_ft_ssl", "-K", key, "-provider", "default", "-provider", "legacy", "-d", "-a"], \
 
 file_tests = [
     # [ "test/files/binary", "0C871EEA3AF7AAAA" ],
@@ -64,7 +64,7 @@ pbkdf_tests = [
 ]
 
 base64_input_tests = [
-    [ "test/files/base64_encoded_test", "0C871EEA3AF7AAAA" ],
+    [ "test/files/base64_encoded_test", "0C871EEA3AF7AAAA", "test/files/.out/base64_encoded_test" ],
 ]
 
 
@@ -206,8 +206,8 @@ def tests():
             sys.exit(1);
         else:
             print("Test des-ecb PBKDF passed for password:", password, "salt:", salt);
-    for input_file, key in base64_input_tests:
-        if not run_cmd_pair_x2_base64(build_base64_input_tests(input_file, key)):
+    for input_file, key, outfile in base64_input_tests:
+        if not run_cmd_pair_x2_base64(build_base64_input_tests(input_file, key, outfile)):
             print("Base64 input test failed for file:", input_file);
             sys.exit(1);
         else:

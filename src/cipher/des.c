@@ -330,7 +330,7 @@ static uint64_t *des_ecb(uint64_t *blocks, int block_count, uint64_t *subkeys, b
     return (output);
 }
 
-static uint64_t *des_ecb(uint64_t *blocks, int block_count, uint64_t *subkeys, bool decrypt, char *iv)
+static uint64_t *des_cbc(uint64_t *blocks, int block_count, uint64_t *subkeys, bool decrypt, char *iv)
 {
     uint64_t *output = ft_calloc(block_count, sizeof(uint64_t));
     if (!output)
@@ -338,11 +338,60 @@ static uint64_t *des_ecb(uint64_t *blocks, int block_count, uint64_t *subkeys, b
 
     for (int i = 0; i < block_count; i++)
     {
+        if (!decrypt)
+        {
+            uint64_t plain = 0x0;
+            if (i == 0)
+            {
+                // XOR first block with IV
+                for (int j = 0; j < 8; j++)
+                {
+                    plain |= ((uint8_t)(blocks[i] >> ((7 - j) * 8)) ^ (uint8_t)iv[j]) << ((7 - j) * 8);
+                }
+                blocks[i] = plain;
+            }
+            else
+            {
+                // XOR other blocks with previous ciphertext
+                uint64_t prev_cipher = output[i - 1];
+                for (int j = 0; j < 8; j++)
+                {
+                    plain |= ((uint8_t)(blocks[i] >> ((7 - j) * 8)) ^ (uint8_t)(prev_cipher >> ((7 - j) * 8))) << ((7 - j) * 8);
+                }
+                blocks[i] = plain;
+            }
+        }
+
+
         uint64_t ciphertext = des_encrypt_block(blocks[i], subkeys, decrypt);
-        // printf("Block %d ciphertext: ", i);
-        // pbin(ciphertext);
+
         output[i] = ciphertext;
+
+        // XOR first block with IV when decrypting and other blocks with previous ciphertext
+        if (decrypt)
+        {
+            uint64_t plain = 0x0;
+
+            if (i == 0)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    plain |= ((uint8_t)(ciphertext >> ((7 - j) * 8)) ^ (uint8_t)iv[j]) << ((7 - j) * 8);
+                }
+            }
+            else
+            {
+                uint64_t prev_cipher = blocks[i - 1];
+                uint64_t plain = 0x0;
+                for (int j = 0; j < 8; j++)
+                {
+                    plain |= ((uint8_t)(ciphertext >> ((7 - j) * 8)) ^ (uint8_t)(prev_cipher >> ((7 - j) * 8))) << ((7 - j) * 8);
+                }
+            }
+            output[i] = plain;
+        }
     }
+
     return (output);
 }
 

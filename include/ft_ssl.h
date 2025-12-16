@@ -12,7 +12,7 @@
 # include "hash.h"
 # include "cipher.h"
 
-# define SSL_MODE_COUNT 8
+# define SSL_MODE_COUNT 12
 
 typedef enum ssl_input_type { 
     SSL_INPUT_FILE,
