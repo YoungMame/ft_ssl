@@ -26,7 +26,7 @@ int             base64_process_command_inputs(t_ssl_command *command);
 
 void            base64_output_messages(t_ssl_command *command, t_base64_params params, const char *algo_name);
 
-t_des_params   des_process_command_flags(t_ssl_command *command);
+t_des_params   des_process_command_flags(t_ssl_command *command, bool is_triple);
 
 void            free_params_des(t_des_params params);
 

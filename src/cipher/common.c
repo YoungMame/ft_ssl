@@ -20,13 +20,13 @@
 //     printf("\n");
 // }
 
-static void check_hex_len(char *str, size_t expected_len)
+static void check_hex_len(char **str, size_t expected_len)
 {
-    size_t len = ft_strlen(str);
+    size_t len = ft_strlen(*str);
     if (len > expected_len)
     {
         ft_printf("ft_ssl: hex string is too long, ignoring excess\n");
-        str[expected_len] = '\0';
+        (*str)[expected_len] = '\0';
     }
     else if (len < expected_len)
     {
@@ -35,14 +35,16 @@ static void check_hex_len(char *str, size_t expected_len)
         if (!padded)
             return (ft_printf("ft_ssl: Error: Memory error\n"), (void)0);
 
+
         size_t diff = expected_len - len;
         for (size_t i = 0; i < diff; i++)
             padded[i] = '0';
         for (size_t i = 0; i < len; i++)
-            padded[diff + i] = str[i];
-        for (size_t i = 0; i < expected_len + 1; i++)
-            str[i] = padded[i];
-        free(padded);
+            padded[diff + i] = (*str)[i];
+        // for (size_t i = 0; i < expected_len + 1; i++)
+        //     (*str)[i] = padded[i];
+        free(*str);
+        *str = padded;
     }
 }
 
@@ -150,7 +152,7 @@ int             des_process_command_inputs(t_ssl_command *command, t_des_params 
     return (1);
 }
 
-t_des_params   des_process_command_flags(t_ssl_command *command)
+t_des_params   des_process_command_flags(t_ssl_command *command, bool is_triple)
 {
     t_des_params params;
 
@@ -185,14 +187,35 @@ t_des_params   des_process_command_flags(t_ssl_command *command)
         }
         else if (command->flags[i].index == 5)
         {
-            check_hex_len(command->flags[i].value, 16);
-            uint64_t decoded = ft_atoi_base64(command->flags[i].value, "0123456789ABCDEF");
-            params.key = ft_calloc(8, sizeof(char));
+            check_hex_len(&(command->flags[i].value), 16 * (is_triple ? 3 : 1));
+
+            uint64_t decoded[3] = {};
+            char *sbstr_temp = ft_substr(command->flags[i].value, 0, 16);
+            if (!sbstr_temp)
+                return (ft_printf("ft_ssl: Error: Memory error\n"), params);
+            decoded[0] = ft_atoi_base64(sbstr_temp, "0123456789ABCDEF");
+            free(sbstr_temp);
+    
+            if (is_triple)
+            {
+                sbstr_temp = ft_substr(command->flags[i].value, 16, 16);
+                if (!sbstr_temp)
+                    return (ft_printf("ft_ssl: Error: Memory error\n"), params);
+                decoded[1] = ft_atoi_base64(sbstr_temp, "0123456789ABCDEF");
+                free(sbstr_temp);
+
+                sbstr_temp = ft_substr(command->flags[i].value, 32, 16);
+                if (!sbstr_temp)
+                    return (ft_printf("ft_ssl: Error: Memory error\n"), params);
+                decoded[2] = ft_atoi_base64(sbstr_temp, "0123456789ABCDEF");
+                free(sbstr_temp);
+            }
+            params.key = ft_calloc(8 * (is_triple ? 3 : 1), sizeof(char));
             if (!params.key)
                 return (ft_printf("ft_ssl: Error: Memory error\n"), params);
-            for (int j = 0; j < 8; j++)
+            for (int j = 0; j < 8 * (is_triple ? 3 : 1); j++)
             {
-                uint8_t byte = decoded >> (uint8_t)(56 - (j * 8)) & 0xFF;
+                uint8_t byte = decoded[j / 8] >> (uint8_t)(56 - ((j % 8) * 8)) & 0xFF;
                 params.key[j] = (char)byte;
             }
         }
@@ -200,7 +223,7 @@ t_des_params   des_process_command_flags(t_ssl_command *command)
             params.password = command->flags[i].value;
         else if (command->flags[i].index == 7)
         {
-            check_hex_len(command->flags[i].value, 16);
+            check_hex_len(&(command->flags[i].value), 16);
             uint64_t decoded = ft_atoi_base64(command->flags[i].value, "0123456789ABCDEF");
             // printf("decoded: %llx\n", decoded);
             params.salt = ft_calloc(8, sizeof(char));
@@ -214,7 +237,7 @@ t_des_params   des_process_command_flags(t_ssl_command *command)
         }
         else if (command->flags[i].index == 8)
         {
-            check_hex_len(command->flags[i].value, 16);
+            check_hex_len(&(command->flags[i].value), 16);
             uint64_t decoded = ft_atoi_base64(command->flags[i].value, "0123456789ABCDEF");
             params.iv = ft_calloc(8, sizeof(char));
             if (!params.iv)

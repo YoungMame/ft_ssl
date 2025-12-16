@@ -87,7 +87,7 @@ def run_cmd_out_pair(array):
     diff = run_cmd(["diff", filename1, filename2])[0]
     if diff:
         print("Output file mismatch: ", filename1, "and", filename2);
-        print("Diff output:", diff);
+        
         return 0;
     os.remove(filename1);
     os.remove(filename2);
@@ -126,13 +126,13 @@ def run_cmd_pair_x2(array):
         print("Cmd 2 stderr:", err2b.decode(errors="ignore"));
         return 0;
 
-    filename1 = array[2][array[0].index("-o") + 1];
-    filename2 = array[3][array[1].index("-out") + 1];
+    filename1 = array[2][array[2].index("-o") + 1];
+    filename2 = array[3][array[3].index("-out") + 1];
     print ("Comparing decrypted files:", filename1, "and", filename2);
     diff = run_cmd(["diff", filename1, filename2])[0]
     if diff:
         print("Output file mismatch: ", filename1, "and", filename2);
-        print("Diff output:", diff);
+        
         return 0;
 
     return 1;
@@ -152,7 +152,7 @@ def run_cmd_pair_x2_base64(array):
     diff = run_cmd(["diff", filename1, filename2])[0];
     if diff:
         print("Output file mismatch: ", filename1, "and", filename2);
-        print("Diff output:", diff);
+        
         return 0;
 
 
