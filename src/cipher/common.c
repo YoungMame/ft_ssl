@@ -20,33 +20,33 @@
 //     printf("\n");
 // }
 
-static void check_hex_len(char **str, size_t expected_len)
-{
-    size_t len = ft_strlen(*str);
-    if (len > expected_len)
-    {
-        ft_printf("ft_ssl: hex string is too long, ignoring excess\n");
-        char *trimmed = ft_strdup(*str + (len - expected_len));
-        if (!trimmed)
-            return (ft_printf("ft_ssl: Error: Memory error\n"), (void)0);
-        free(*str);
-        *str = trimmed;
-    }
-    else if (len < expected_len)
-    {
-        ft_printf("ft_ssl: hex string is too short, padding with zeros bytes to length\n");
-        char *padded = ft_calloc(expected_len + 1, 1);
-        if (!padded)
-            return (ft_printf("ft_ssl: Error: Memory error\n"), (void)0);
+// static void check_hex_len(char **str, size_t expected_len)
+// {
+//     size_t len = ft_strlen(*str);
+//     if (len > expected_len)
+//     {
+//         ft_printf("ft_ssl: hex string is too long, ignoring excess\n");
+//         char *trimmed = ft_strdup(*str + (len - expected_len));
+//         if (!trimmed)
+//             return (ft_printf("ft_ssl: Error: Memory error\n"), (void)0);
+//         free(*str);
+//         *str = trimmed;
+//     }
+//     else if (len < expected_len)
+//     {
+//         ft_printf("ft_ssl: hex string is too short, padding with zeros bytes to length\n");
+//         char *padded = ft_calloc(expected_len + 1, 1);
+//         if (!padded)
+//             return (ft_printf("ft_ssl: Error: Memory error\n"), (void)0);
 
-        size_t diff = expected_len - len;
-        memset(padded, '0', diff);
-        memcpy(padded + diff, *str, len);
+//         size_t diff = expected_len - len;
+//         memset(padded, '0', diff);
+//         memcpy(padded + diff, *str, len);
 
-        free(*str);
-        *str = padded;
-    }
-}
+//         free(*str);
+//         *str = padded;
+//     }
+// }
 
 int             base64_process_command_inputs(t_ssl_command *command)
 {
@@ -187,28 +187,24 @@ t_des_params   des_process_command_flags(t_ssl_command *command, bool is_triple)
         }
         else if (command->flags[i].index == 5)
         {
-            check_hex_len(&(command->flags[i].value), 16 * (is_triple ? 3 : 1));
-
+            // check_hex_len(&(command->flags[i].value), 16 * (is_triple ? 3 : 1));
             uint64_t decoded[3] = {};
-            char *sbstr_temp = ft_substr(command->flags[i].value, 0, 16);
-            if (!sbstr_temp)
-                return (ft_printf("ft_ssl: Error: Memory error\n"), params);
-            decoded[0] = ft_atoi_base64(sbstr_temp, "0123456789ABCDEF");
-            free(sbstr_temp);
-    
+            char hex_string[16] = "0000000000000000";
+            size_t len = ft_strlen(command->flags[i].value);
+
+            ft_memcpy(hex_string, command->flags[i].value,  (len < 16 ? len : 16));
+            decoded[0] = ft_atoi_base64(hex_string, "0123456789ABCDEF");
+            // printf("decoded key part 0: %lx\n", decoded[0]);
+            // printf("original hex: %s\n", hex_string);
             if (is_triple)
             {
-                sbstr_temp = ft_substr(command->flags[i].value, 16, 16);
-                if (!sbstr_temp)
-                    return (ft_printf("ft_ssl: Error: Memory error\n"), params);
-                decoded[1] = ft_atoi_base64(sbstr_temp, "0123456789ABCDEF");
-                free(sbstr_temp);
+                ft_bzero(hex_string, 16);
+                ft_memcpy(hex_string, command->flags[i].value + 16,  (len < 32 ? len - 16 : 16));
+                decoded[1] = ft_atoi_base64(hex_string, "0123456789ABCDEF");
 
-                sbstr_temp = ft_substr(command->flags[i].value, 32, 16);
-                if (!sbstr_temp)
-                    return (ft_printf("ft_ssl: Error: Memory error\n"), params);
-                decoded[2] = ft_atoi_base64(sbstr_temp, "0123456789ABCDEF");
-                free(sbstr_temp);
+                ft_bzero(hex_string, 16);
+                ft_memcpy(hex_string, command->flags[i].value + 32,  (len < 48 ? len - 32 : 16));
+                decoded[2] = ft_atoi_base64(hex_string, "0123456789ABCDEF");
             }
             params.key = ft_calloc(8 * (is_triple ? 3 : 1), sizeof(char));
             if (!params.key)
@@ -223,12 +219,16 @@ t_des_params   des_process_command_flags(t_ssl_command *command, bool is_triple)
             params.password = command->flags[i].value;
         else if (command->flags[i].index == 7)
         {
-            check_hex_len(&(command->flags[i].value), 16);
-            uint64_t decoded = ft_atoi_base64(command->flags[i].value, "0123456789ABCDEF");
-            // printf("decoded: %llx\n", decoded);
+            // check_hex_len(&(command->flags[i].value), 16);
+            uint64_t    decoded;
+            char        hex_string[16] = "0000000000000000";
+            size_t      len = ft_strlen(command->flags[i].value);
+
             params.salt = ft_calloc(8, sizeof(char));
             if (!params.salt)
                 return (ft_printf("ft_ssl: Error: Memory error\n"), params);
+            ft_memcpy(hex_string, command->flags[i].value,  (len < 16 ? len : 16));
+            decoded = ft_atoi_base64(hex_string, "0123456789ABCDEF");
             for (int j = 0; j < 8; j++)
             {
                 uint8_t byte = decoded >> (uint8_t)(56 - (j * 8)) & 0xFF;
@@ -237,11 +237,16 @@ t_des_params   des_process_command_flags(t_ssl_command *command, bool is_triple)
         }
         else if (command->flags[i].index == 8)
         {
-            check_hex_len(&(command->flags[i].value), 16);
-            uint64_t decoded = ft_atoi_base64(command->flags[i].value, "0123456789ABCDEF");
+            // check_hex_len(&(command->flags[i].value), 16);
+            uint64_t    decoded;
+            char        hex_string[16] = "0000000000000000";
+            size_t      len = ft_strlen(command->flags[i].value);
+
             params.iv = ft_calloc(8, sizeof(char));
             if (!params.iv)
                 return (ft_printf("ft_ssl: Error: Memory error\n"), params);
+            ft_memcpy(hex_string, command->flags[i].value,  (len < 16 ? len : 16));
+            decoded = ft_atoi_base64(hex_string, "0123456789ABCDEF");
             for (int j = 0; j < 8; j++)
             {
                 uint8_t byte = decoded >> (uint8_t)(56 - (j * 8)) & 0xFF;

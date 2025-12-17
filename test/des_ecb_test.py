@@ -50,6 +50,8 @@ encode_decode_cross_tests = [
     [ "test/files/text", "test/files/.out/text.encrypted", "test/files/.out/text.decrypted","0C871EEA3AF7AAAA" ],
     [ "test/files/binary", "test/files/.out/binary.encrypted", "test/files/.out/binary.decrypted","0C871EEA3AF7AAAA" ],
     [ "test/files/image.png", "test/files/.out/image.png.encrypted", "test/files/.out/image.png.decrypted","0C871EEA3AF7AAAA" ],
+    [ "test/files/image.png", "test/files/.out/image.png.encrypted", "test/files/.out/image.png.decrypted","0C871EEA3AF7AAAAEA3AF7A71E" ],
+    [ "test/files/image.png", "test/files/.out/image.png.encrypted", "test/files/.out/image.png.decrypted","0C871E" ],
 ]
 
 file_tests_password_salt = [
@@ -77,16 +79,13 @@ def run_cmd(cmd):
     return proc.stdout, proc.stderr;
 
 def run_cmd_out_pair(array):
-    out1, err1 = run_cmd(array[0]);
-    out2, err2 = run_cmd(array[1]);
+    out1 = run_cmd(array[0]);
+    out2 = run_cmd(array[1]);
     filename1 = array[0][array[0].index("-o") + 1];
     filename2 = array[1][array[1].index("-out") + 1];
     # open(filename1, "w").close();
     # open(filename2, "w").close();
-    if err1:
-        print("Cmd 1 stderr:", err1.decode(errors="ignore"));
-    if err2:
-        print("Cmd 2 stderr:", err2.decode(errors="ignore"));
+
     diff = run_cmd(["diff", filename1, filename2])[0]
     if diff:
         print("Output file mismatch: ", filename1, "and", filename2);
@@ -97,12 +96,9 @@ def run_cmd_out_pair(array):
     return 1;
 
 def run_cmd_pair(array):
-    out1, err1 = run_cmd(array[0]);
-    out2, err2 = run_cmd(array[1]);
-    if err1:
-        print("Cmd 1 stderr:", err1.decode(errors="ignore"));
-    if err2:
-        print("Cmd 2 stderr:", err2.decode(errors="ignore"));
+    out1 = run_cmd(array[0]);
+    out2 = run_cmd(array[1]);
+
     if out1 != out2:
         print("Output mismatch:");
         print("Cmd 1:", " ".join(array[0]));
@@ -113,21 +109,11 @@ def run_cmd_pair(array):
     return 1;
 
 def run_cmd_pair_x2(array):
-    out1a, err1a = run_cmd(array[0]);
-    out2a, err2a = run_cmd(array[1]);
-    if err1a or err2a:
-        print("Error during command execution:");
-        print("Cmd 1 stderr:", err1a.decode(errors="ignore"));
-        print("Cmd 2 stderr:", err2a.decode(errors="ignore"));
-        return 0;
+    out1a = run_cmd(array[0]);
+    out2a = run_cmd(array[1]);
 
-    out1b, err1b = run_cmd(array[2]);
-    out2b, err2b = run_cmd(array[3]);
-    if err1b or err2b:
-        print("Error during command execution:");
-        print("Cmd 1 stderr:", err1b.decode(errors="ignore"));
-        print("Cmd 2 stderr:", err2b.decode(errors="ignore"));
-        return 0;
+    out1b = run_cmd(array[2]);
+    out2b = run_cmd(array[3]);
 
     filename1 = array[2][array[2].index("-o") + 1];
     filename2 = array[3][array[3].index("-out") + 1];
@@ -141,13 +127,8 @@ def run_cmd_pair_x2(array):
     return 1;
 
 def run_cmd_pair_x2_base64(array):
-    out1a, err1a = run_cmd(array[0]);
-    out2a, err2a = run_cmd(array[1]);
-    if err1a or err2a:
-        print("Error during command execution:");
-        print("Cmd 1 stderr:", err1a.decode(errors="ignore"));
-        print("Cmd 2 stderr:", err2a.decode(errors="ignore"));
-        return 0;
+    out1a = run_cmd(array[0]);
+    out2a = run_cmd(array[1]);
 
     filename1 = array[0][array[0].index("-o") + 1];
     filename2 = array[1][array[1].index("-out") + 1];
@@ -159,13 +140,8 @@ def run_cmd_pair_x2_base64(array):
         return 0;
 
 
-    out1b, err1b = run_cmd(array[2]);
-    out2b, err2b = run_cmd(array[3]);
-    if err1b or err2b:
-        print("Error during command execution:");
-        print("Cmd 1 stderr:", err1b.decode(errors="ignore"));
-        print("Cmd 2 stderr:", err2b.decode(errors="ignore"));
-        return 0;
+    out1b = run_cmd(array[2]);
+    out2b = run_cmd(array[3]);
 
     if out1b != out2b:
         print("Decrypted output mismatch:");

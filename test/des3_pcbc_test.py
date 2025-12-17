@@ -29,7 +29,6 @@ def run_cmd_encode_decode(array):
     out2, err2 = run_cmd(array[1]);
 
     diff = run_cmd(["diff", input_file, decrypted_file])[0]
-    print("Diff output:", diff)
     if diff:
         print("Output file mismatch: ", input_file, "and", decrypted_file);
         
