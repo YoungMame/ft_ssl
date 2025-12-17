@@ -3,12 +3,9 @@
 static const char *base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static char *malloc_buffer(size_t input_length) {
-    /* number of base64 chars = 4 * ceil(input_length / 3) */
     size_t groups = (input_length + 2) / 3;
     size_t base64_chars_count = groups * 4;
-    /* newlines every 64 chars (after encoding), so reserve space for them */
     size_t newline_count = base64_chars_count / 64;
-    /* allocate base64 chars + newlines + terminating null */
     char *result = ft_calloc(base64_chars_count + newline_count + 1, sizeof(char));
     return result;
 }
@@ -108,7 +105,6 @@ char *base64_encode(const char *input, const size_t input_len, size_t *out_size)
         }
     }
     
-    /* Get the last bits */
     if (bit_index > 0)
     {
         base_index = base_index << (6 - bit_index);
@@ -116,7 +112,6 @@ char *base64_encode(const char *input, const size_t input_len, size_t *out_size)
         byte_index++;
     }
 
-    /* Base64 padding */
     if (input_len % 3 == 1)
     {
         result[byte_index++] = '=';

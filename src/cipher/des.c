@@ -707,11 +707,6 @@ int des(t_ssl_command *command)
         cipher = des_pcbc(blocks, blocks_count, subkeys, params.decode, params.iv);
     else if (command->mode == 13) // des3-pcbc
         cipher = triple_des_pcbc(blocks, blocks_count, subkeys, params.decode, params.iv);
-    // printf("Cipher: ");
-    // for (int i = 0; i < blocks_count; i++)
-    // {
-    //     printf("%s ", ft_itoa_base_unsigned64(cipher[i], "0123456789abcdef", 16));
-    // }
 
     uint8_t *final = final_value(cipher, blocks_count, params.decode);
     if (!final)
