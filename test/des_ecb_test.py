@@ -75,6 +75,8 @@ base64_input_tests = [
 
 
 def run_cmd(cmd):
+    if os.getenv("FT_SSL_TEST_DEBUG") == "1":
+        print("Running command:", " ".join(cmd));
     proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=False);
     return proc.stdout, proc.stderr;
 

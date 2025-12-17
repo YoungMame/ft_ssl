@@ -34,10 +34,11 @@ int parse(int argc, char **argv, t_ssl_command *command)
     int         algo_index = -1;
 
     // printf("hello %s \n", hash_options[0]);
-
+    int input_name_len = ft_strlen(argv[1]);
     for (int i = 0; i < SSL_MODE_COUNT; i++)
     {
-        if (!ft_strncmp(argv[1], g_ssl_algos[i].name, ft_strlen(argv[1])) && g_ssl_algos[i].f != NULL)
+        int algo_name_len = ft_strlen(g_ssl_algos[i].name);
+        if (!ft_strncmp(argv[1], g_ssl_algos[i].name, (algo_name_len < input_name_len ? input_name_len : algo_name_len)) && g_ssl_algos[i].f != NULL)
         {
             algo_index = i;
             algo = g_ssl_algos[algo_index];
@@ -59,9 +60,14 @@ int parse(int argc, char **argv, t_ssl_command *command)
     for (int i = 2; i < argc; i++)
     {
         bool    is_flag_spotted = false;
+        int arg_len = ft_strlen(argv[i]);
+
         for (int j = 0; j < algo.nb_options; j++)
         {
-            if (!ft_strncmp(argv[i], algo.options[j], ft_strlen(argv[i])) || (algo.options_long[j] && !(ft_strncmp(argv[i], algo.options_long[j], ft_strlen(argv[i])))))
+            int option_len = algo.options[j] ? ft_strlen(algo.options[j]) : 0;
+            int option_long_len = algo.options_long[j] ? ft_strlen(algo.options_long[j]) : 0;
+
+            if (!ft_strncmp(argv[i], algo.options[j], (arg_len > option_len ? arg_len : option_len)) || (algo.options_long[j] && !(ft_strncmp(argv[i], algo.options_long[j], (arg_len > option_long_len ? arg_len : option_long_len)))))            
             {
                 is_flag_spotted = true;
                 if (algo.args[j] != NULL)

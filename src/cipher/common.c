@@ -189,10 +189,11 @@ t_des_params   des_process_command_flags(t_ssl_command *command, bool is_triple)
         {
             // check_hex_len(&(command->flags[i].value), 16 * (is_triple ? 3 : 1));
             uint64_t decoded[3] = {};
-            char hex_string[16] = "0000000000000000";
+            char hex_string[17] = "0000000000000000\0";
             size_t len = ft_strlen(command->flags[i].value);
 
             ft_memcpy(hex_string, command->flags[i].value,  (len < 16 ? len : 16));
+            hex_string[16] = '\0';
             decoded[0] = ft_atoi_base64(hex_string, "0123456789ABCDEF");
             // printf("decoded key part 0: %lx\n", decoded[0]);
             // printf("original hex: %s\n", hex_string);
@@ -200,10 +201,12 @@ t_des_params   des_process_command_flags(t_ssl_command *command, bool is_triple)
             {
                 ft_bzero(hex_string, 16);
                 ft_memcpy(hex_string, command->flags[i].value + 16,  (len < 32 ? len - 16 : 16));
+                hex_string[16] = '\0';
                 decoded[1] = ft_atoi_base64(hex_string, "0123456789ABCDEF");
 
                 ft_bzero(hex_string, 16);
                 ft_memcpy(hex_string, command->flags[i].value + 32,  (len < 48 ? len - 32 : 16));
+                hex_string[16] = '\0';
                 decoded[2] = ft_atoi_base64(hex_string, "0123456789ABCDEF");
             }
             params.key = ft_calloc(8 * (is_triple ? 3 : 1), sizeof(char));
@@ -221,13 +224,14 @@ t_des_params   des_process_command_flags(t_ssl_command *command, bool is_triple)
         {
             // check_hex_len(&(command->flags[i].value), 16);
             uint64_t    decoded;
-            char        hex_string[16] = "0000000000000000";
+            char        hex_string[17] = "0000000000000000\0";
             size_t      len = ft_strlen(command->flags[i].value);
 
             params.salt = ft_calloc(8, sizeof(char));
             if (!params.salt)
                 return (ft_printf("ft_ssl: Error: Memory error\n"), params);
             ft_memcpy(hex_string, command->flags[i].value,  (len < 16 ? len : 16));
+            hex_string[16] = '\0';
             decoded = ft_atoi_base64(hex_string, "0123456789ABCDEF");
             for (int j = 0; j < 8; j++)
             {
@@ -239,13 +243,14 @@ t_des_params   des_process_command_flags(t_ssl_command *command, bool is_triple)
         {
             // check_hex_len(&(command->flags[i].value), 16);
             uint64_t    decoded;
-            char        hex_string[16] = "0000000000000000";
+            char        hex_string[17] = "0000000000000000\0";
             size_t      len = ft_strlen(command->flags[i].value);
 
             params.iv = ft_calloc(8, sizeof(char));
             if (!params.iv)
                 return (ft_printf("ft_ssl: Error: Memory error\n"), params);
             ft_memcpy(hex_string, command->flags[i].value,  (len < 16 ? len : 16));
+            hex_string[16] = '\0';
             decoded = ft_atoi_base64(hex_string, "0123456789ABCDEF");
             for (int j = 0; j < 8; j++)
             {
