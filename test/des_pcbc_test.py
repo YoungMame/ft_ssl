@@ -13,7 +13,6 @@ file_tests = [
 ]
 
 def run_cmd(cmd):
-    print("Running command:", " ".join(cmd));
     proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=False);
     return proc.stdout, proc.stderr;
 
@@ -31,9 +30,9 @@ def run_cmd_encode_decode(array):
         print("Output file mismatch: ", input_file, "and", decrypted_file);
         
         return 0;
-    # Remove only intermediate files, not original inputs
-    # os.remove(encrypted_file);
-    # os.remove(decrypted_file);
+
+    os.remove(encrypted_file);
+    os.remove(decrypted_file);
     return 1;
 
 

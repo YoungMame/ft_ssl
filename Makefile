@@ -58,6 +58,7 @@ test: all
 	python3 test/des_cbc_test.py
 	python3 test/des3_cbc_test.py
 	python3 test/des3_ecb_test.py
+	python3 test/des3_pcbc_test.py
 
 .PHONY: all clean fclean re test
 

@@ -26,23 +26,23 @@ static void check_hex_len(char **str, size_t expected_len)
     if (len > expected_len)
     {
         ft_printf("ft_ssl: hex string is too long, ignoring excess\n");
-        (*str)[expected_len] = '\0';
+        char *trimmed = ft_strdup(*str + (len - expected_len));
+        if (!trimmed)
+            return (ft_printf("ft_ssl: Error: Memory error\n"), (void)0);
+        free(*str);
+        *str = trimmed;
     }
     else if (len < expected_len)
     {
         ft_printf("ft_ssl: hex string is too short, padding with zeros bytes to length\n");
-        char *padded = ft_calloc(expected_len + 1, sizeof(char));
+        char *padded = ft_calloc(expected_len + 1, 1);
         if (!padded)
             return (ft_printf("ft_ssl: Error: Memory error\n"), (void)0);
 
-
         size_t diff = expected_len - len;
-        for (size_t i = 0; i < diff; i++)
-            padded[i] = '0';
-        for (size_t i = 0; i < len; i++)
-            padded[diff + i] = (*str)[i];
-        // for (size_t i = 0; i < expected_len + 1; i++)
-        //     (*str)[i] = padded[i];
+        memset(padded, '0', diff);
+        memcpy(padded + diff, *str, len);
+
         free(*str);
         *str = padded;
     }

@@ -503,6 +503,69 @@ static uint64_t *triple_des_cbc(uint64_t *blocks, int block_count, uint64_t *sub
     return (output);
 }
 
+static uint64_t *triple_des_pcbc(uint64_t *blocks, int block_count, uint64_t *subkeys, bool decrypt, char *iv)
+{
+    uint64_t *output = ft_calloc(block_count, sizeof(uint64_t));
+    if (!output)
+        return (NULL);
+    
+    uint64_t    prev_cipher;
+    prev_cipher = 0x0;
+    for (int j = 0; j < 8; j++)
+    {
+        prev_cipher = (prev_cipher << 8) | (uint8_t)iv[j];
+    }
+
+    uint64_t   k1[16];
+    uint64_t   k2[16];
+    uint64_t   k3[16];
+
+    for (int i = 0; i < 16; i++)
+    {
+        k1[i] = subkeys[i];
+        k2[i] = subkeys[i + 16];
+        k3[i] = subkeys[i + 32];
+    }
+
+
+    for (int i = 0; i < block_count; i++)
+    {
+
+        uint64_t xor_result = blocks[i];
+        
+        if (!decrypt) // encode
+            xor_result ^= prev_cipher;
+
+        uint64_t ciphertext = xor_result;
+
+        if (!decrypt)
+        {
+            ciphertext = des_encrypt_block(ciphertext, k1, false); // E
+            ciphertext = des_encrypt_block(ciphertext, k2, true);  // D
+            ciphertext = des_encrypt_block(ciphertext, k3, false); // E
+        }
+        else
+        {
+            ciphertext = des_encrypt_block(ciphertext, k3, true);  // D
+            ciphertext = des_encrypt_block(ciphertext, k2, false); // E
+            ciphertext = des_encrypt_block(ciphertext, k1, true);  // D
+        }
+
+        if (!decrypt) // encode
+        {
+            output[i] = ciphertext;
+            prev_cipher = ciphertext ^ blocks[i];
+        }
+        else // decode
+        {
+            output[i] = ciphertext ^ prev_cipher;
+            prev_cipher = blocks[i] ^ output[i];
+        }
+    }
+
+    return (output);
+}
+
 static uint64_t *triple_des_ecb(uint64_t *blocks, int block_count, uint64_t *subkeys, bool decrypt)
 {
     uint64_t *output = ft_calloc(block_count, sizeof(uint64_t));
@@ -548,8 +611,8 @@ static uint64_t *triple_des_ecb(uint64_t *blocks, int block_count, uint64_t *sub
 
 int des(t_ssl_command *command)
 {
-    // 3DES ?
-    bool            is_triple = (command->mode == 9 || command->mode == 10 || command->mode == 11);
+    // 3DES ? include 3DES-PCBC (mode 13)
+    bool            is_triple = (command->mode == 9 || command->mode == 10 || command->mode == 11 || command->mode == 13);
 
     t_des_params    params = des_process_command_flags(command, is_triple);
     int             success = des_process_command_inputs(command, params);
@@ -627,10 +690,10 @@ int des(t_ssl_command *command)
         cipher = triple_des_cbc(blocks, blocks_count, subkeys, params.decode, params.iv);
     else if (command->mode == 11) // des3-ecb
         cipher = triple_des_ecb(blocks, blocks_count, subkeys, params.decode);
-    else if (command->mode == 12) // des-des_pcbc
+    else if (command->mode == 12) // des-pcbc
         cipher = des_pcbc(blocks, blocks_count, subkeys, params.decode, params.iv);
-    // else if (command->mode == 13) // des3-cfb
-    //     cipher = des_cfb(blocks, blocks_count, subkeys, params.decode, params.iv);
+    else if (command->mode == 13) // des3-pcbc
+        cipher = triple_des_pcbc(blocks, blocks_count, subkeys, params.decode, params.iv);
     // printf("Cipher: ");
     // for (int i = 0; i < blocks_count; i++)
     // {

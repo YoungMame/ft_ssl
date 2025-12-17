@@ -34,6 +34,10 @@ file_tests = [
     # [ "test/files/binary", "0C871EEA3AF7AAAA" ],
     [ "test/files/text", "0C871EEA3AF7AAAA" ],
     [ "test/files/image.png", "0C871EEA3AF7AAAA" ],
+    [ "test/files/text", "0C871EEA3AF7AAAA" ],
+    [ "test/files/text", "0C871EEA3AF7AAAA" ],
+    [ "test/files/text", "4242424242424242" ],
+    [ "test/files/text", "4242424242424242" ],
 ]
 
 out_file_tests = [
@@ -69,7 +73,6 @@ base64_input_tests = [
 
 
 def run_cmd(cmd):
-    print("Running command:", " ".join(cmd));
     proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=False);
     return proc.stdout, proc.stderr;
 

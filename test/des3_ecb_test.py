@@ -15,6 +15,12 @@ def build_encode_decode_cross_test(test_file, test_out_file, test_decrypted_file
            ["./ft_ssl", "3des-ecb", "-d", "-i", test_out_file + "_openssl", "-o", test_decrypted_file + "_ft_ssl", "-k", key], \
            ["openssl", "des-ede3-ecb", "-d", "-in", test_out_file + "_ft_ssl", "-out", test_decrypted_file + "_openssl", "-K", key, "-provider", "default", "-provider", "legacy"]
 
+def build_encode_decode_cross_test_pbkdf(test_file, test_out_file, test_decrypted_file, password, salt):
+    return ["./ft_ssl", "3des-ecb", "-i", test_file, "-o", test_out_file + "_ft_ssl", "-p", password, "-s", salt], \
+           ["openssl", "des-ede3-ecb", "-in", test_file, "-out", test_out_file + "_openssl", "-k", password, "-S", salt, "-provider", "default", "-provider", "legacy"], \
+           ["./ft_ssl", "3des-ecb", "-d", "-i", test_out_file + "_openssl", "-o", test_decrypted_file + "_ft_ssl", "-p", password, "-s", salt], \
+           ["openssl", "des-ede3-ecb", "-d", "-in", test_out_file + "_ft_ssl", "-out", test_decrypted_file + "_openssl", "-k", password, "-S", salt, "-provider", "default", "-provider", "legacy"]
+
 file_tests = [
     # [ "test/files/binary" ],
     [ "test/files/text", "0C871EEA3A53959353267524379562934659463564932562" ],
@@ -33,8 +39,13 @@ encode_decode_cross_tests = [
     [ "test/files/image.png", "test/files/.out/image.png.encrypted", "test/files/.out/image.png.decrypted","0C871EEA3A53959353267524379562934659463564932562" ],
 ]
 
+encode_decode_cross_tests = [
+    [ "test/files/text", "test/files/.out/text.encrypted", "test/files/.out/text.decrypted","MyAmazingPass", "0C871EEA3AF7AAFF" ],
+    [ "test/files/binary", "test/files/.out/binary.encrypted", "test/files/.out/binary.decrypted","42424242424242", "0C871EEA3AF7ABBA" ],
+    [ "test/files/image.png", "test/files/.out/image.png.encrypted", "test/files/.out/image.png.decrypted","passpaspaspsdgk[fdgkdkgh]", "0C871EEA3AF7A42A" ],
+]
+
 def run_cmd(cmd):
-    print("Running command:", " ".join(cmd));
     proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=False);
     return proc.stdout, proc.stderr;
 
@@ -123,6 +134,12 @@ def tests():
             sys.exit(1);
         else:
             print("Test des-ecb encode-decode cross passed for file:", test_file);
+    for test_file, test_out_file, test_decrypted_file, password, salt in encode_decode_cross_tests:
+        if not run_cmd_pair_x2(build_encode_decode_cross_test_pbkdf(test_file, test_out_file, test_decrypted_file, password, salt)):
+            print("Encode-decode cross test with PBKDF failed for file:", test_file);
+            sys.exit(1);
+        else:
+            print("Test des-ecb encode-decode cross with PBKDF passed for file:", test_file);
 
     print("All des-ecb tests passed.")
 
