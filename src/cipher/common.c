@@ -188,6 +188,7 @@ t_des_params   des_process_command_flags(t_ssl_command *command, bool is_triple)
         else if (command->flags[i].index == 5)
         {
             // check_hex_len(&(command->flags[i].value), 16 * (is_triple ? 3 : 1));
+            // OpenSSL pads short keys with zeros on the left
             uint64_t decoded[3] = {};
             char hex_string[17] = "0000000000000000\0";
             size_t len = ft_strlen(command->flags[i].value);
@@ -200,12 +201,14 @@ t_des_params   des_process_command_flags(t_ssl_command *command, bool is_triple)
             if (is_triple)
             {
                 ft_bzero(hex_string, 16);
-                ft_memcpy(hex_string, command->flags[i].value + 16,  (len < 32 ? len - 16 : 16));
+                if (len > 16)
+                    ft_memcpy(hex_string, command->flags[i].value + 16,  (len < 32 ? len - 16 : 16));
                 hex_string[16] = '\0';
                 decoded[1] = ft_atoi_base64(hex_string, "0123456789ABCDEF");
 
                 ft_bzero(hex_string, 16);
-                ft_memcpy(hex_string, command->flags[i].value + 32,  (len < 48 ? len - 32 : 16));
+                if (len > 32)
+                    ft_memcpy(hex_string, command->flags[i].value + 32,  (len < 48 ? len - 32 : 16));
                 hex_string[16] = '\0';
                 decoded[2] = ft_atoi_base64(hex_string, "0123456789ABCDEF");
             }

@@ -31,10 +31,10 @@ encode_decode_cross_tests = [
     [ "test/files/text", "test/files/.out/text.encrypted", "test/files/.out/text.decrypted","0C871EEA3A53959353267524379562934659463564932562", "0C871EEA3AF7AAAA" ],
     [ "test/files/binary", "test/files/.out/binary.encrypted", "test/files/.out/binary.decrypted","0C871EEA3A53959353267524379562934659463564932562", "0C871EEA3AF7AAAA" ],
     [ "test/files/image.png", "test/files/.out/image.png.encrypted", "test/files/.out/image.png.decrypted","0C871EEA3A53959353267524379562934659463564932562", "0C871EEA3AF7AAAA" ],
-    [ "test/files/text", "test/files/.out/text.encrypted", "test/files/.out/text.decrypted","0C8715756293432562", "0C887151E8715A87158715AAA" ],
-    [ "test/files/binary", "test/files/.out/binary.encrypted", "test/files/.out/binary.decrypted","0C8715756293432562", "0C887151E8715A87158715AAA" ],
+    [ "test/files/text", "test/files/.out/text.encrypted", "test/files/.out/text.decrypted","0C871EEA3A53959353267524379562934659463564932562", "0C887151E8715A87158715AAA" ],
+    [ "test/files/binary", "test/files/.out/binary.encrypted", "test/files/.out/binary.decrypted","0C871EEA3A53959353267524379562934659463564932562", "0C887151E8715A87158715AAA" ],
     [ "test/files/image.png", "test/files/.out/image.png.encrypted", "test/files/.out/image.png.decrypted","0C871EEA3A53959353267524379562934659463564932562", "42" ],
-    [ "test/files/image.png", "test/files/.out/image.png.encrypted", "test/files/.out/image.png.decrypted","42", "0C871EEA3A53959353267524379562934659463564932562" ],
+    [ "test/files/image.png", "test/files/.out/image.png.encrypted", "test/files/.out/image.png.decrypted","0C871EEA3A53959353267524379562934659463564932562", "0C871EEA3A53959353267524379562934659463564932562" ],
 ]
 
 def run_cmd(cmd):

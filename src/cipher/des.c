@@ -617,7 +617,7 @@ int des(t_ssl_command *command)
     t_des_params    params = des_process_command_flags(command, is_triple);
     int             success = des_process_command_inputs(command, params);
     if (!success)
-        return (0);
+        return (free_params_des(params), 0);
 
     if (command->message_count == 0 || !command->messages[0].content || command->messages[0].content_size == 0)
         return (free_params_des(params), ft_printf("ft_ssl: Error: No input provided\n"), 0);
@@ -642,7 +642,6 @@ int des(t_ssl_command *command)
     {
         if (!params.password)
             return (free_params_des(params), ft_printf("ft_ssl: Error: No key or password provided\n"), 0);
-        /* For 3DES: derive 24 bytes (3 keys × 8 bytes); for DES: derive 8 bytes */
         size_t key_derive_len = is_triple ? 24 : 8;
         uint8_t         *generated_key = pbkdf2((const char *)params.password, ft_strlen(params.password), (const char *)params.salt, 8, hmac_hash256, 32, 1000, key_derive_len);
         if (!generated_key)
@@ -666,17 +665,17 @@ int des(t_ssl_command *command)
     }
     uint64_t *subkeys = des_key_schedule(key_numeric);
     if (!subkeys)
-        return (0);
+        return (free_params_des(params), 0);
     if (is_triple)
     {
         uint64_t *second_subkeys = des_key_schedule(second_key_numeric);
         uint64_t *third_subkeys = des_key_schedule(third_key_numeric);
         if (!second_subkeys || !third_subkeys)
-            return (free(subkeys), 0);
+            return (free(subkeys), free(second_subkeys), free(third_subkeys), free_params_des(params), 0);
 
         uint64_t *all_subkeys = ft_calloc(48, sizeof(uint64_t));
         if (!all_subkeys)
-            return (free(subkeys), free(second_subkeys), free(third_subkeys), ft_printf("ft_ssl: Error: Memory error\n"), 0);
+            return (free(subkeys), free(second_subkeys), free(third_subkeys), free_params_des(params), ft_printf("ft_ssl: Error: Memory error\n"), 0);
         for (int i = 0; i < 16; i++)
         {
             all_subkeys[i] = subkeys[i];
