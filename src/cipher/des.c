@@ -642,12 +642,25 @@ int des(t_ssl_command *command)
     {
         if (!params.password)
             return (free_params_des(params), ft_printf("ft_ssl: Error: No key or password provided\n"), 0);
-        uint8_t         *generated_key = pbkdf2((const char *)params.password, ft_strlen(params.password), (const char *)params.salt, 8, hmac_hash256, 32, 1000, 8);
+        /* For 3DES: derive 24 bytes (3 keys × 8 bytes); for DES: derive 8 bytes */
+        size_t key_derive_len = is_triple ? 24 : 8;
+        uint8_t         *generated_key = pbkdf2((const char *)params.password, ft_strlen(params.password), (const char *)params.salt, 8, hmac_hash256, 32, 1000, key_derive_len);
         if (!generated_key)
             return (free_params_des(params), 0);
+
         for (int i = 0; i < 8; i++)
-        {
             key_numeric = (key_numeric << 8) | generated_key[i];
+
+        if (is_triple)
+        {
+            for (int i = 8; i < 16; i++)
+            {
+                second_key_numeric = (second_key_numeric << 8) | generated_key[i];
+            }
+            for (int i = 16; i < 24; i++)
+            {
+                third_key_numeric = (third_key_numeric << 8) | generated_key[i];
+            }
         }
         free(generated_key);
     }
