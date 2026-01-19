@@ -642,6 +642,8 @@ int des(t_ssl_command *command)
     {
         if (!params.password)
             return (free_params_des(params), ft_printf("ft_ssl: Error: No key or password provided\n"), 0);
+        if (!params.salt)
+            return (free_params_des(params), ft_printf("ft_ssl: Error: No salt provided for key derivation\n"), 0);
         size_t key_derive_len = is_triple ? 24 : 8;
         uint8_t         *generated_key = pbkdf2((const char *)params.password, ft_strlen(params.password), (const char *)params.salt, 8, hmac_hash256, 32, 1000, key_derive_len);
         if (!generated_key)

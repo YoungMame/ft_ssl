@@ -79,6 +79,12 @@ uint8_t *pbkdf2(const char *password, size_t password_len, const char *salt, siz
     uint8_t     t[block_count][hlen];
     uint8_t     *pass_digest = NULL;
 
+    // printf("Deriving key using PBKDF2 with %zu hlen and dklen %zu...\n", hlen, dklen);
+    // printf("Salt: ");
+    // for (size_t x = 0; x < salt_len; x++)
+    //     printf("%02x", (uint8_t)salt[x]);
+    // printf("\n");
+
     if (password_len > SHA256_BLOCK_SIZE)
     {
         pass_digest = (uint8_t *)sha256_hashing((char *)password, password_len, false);
