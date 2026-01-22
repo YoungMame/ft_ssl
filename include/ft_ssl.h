@@ -100,8 +100,6 @@ char    *read_fd(int fd, size_t *out_size);
 
 char *mem_join(char *s1, size_t len1, char *s2, size_t len2);
 
-uint64_t swap_uint64( uint64_t val );
-
 // key derivation pbkdf2
 typedef uint8_t *(*t_pbkdf2_prf)(uint8_t *, size_t, uint8_t *, size_t);
 
