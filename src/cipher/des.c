@@ -332,6 +332,9 @@ static uint64_t *des_ecb(uint64_t *blocks, int block_count, uint64_t *subkeys, b
 
 static uint64_t *des_cbc(uint64_t *blocks, int block_count, uint64_t *subkeys, bool decrypt, char *iv)
 {
+    if (!iv)
+        return (ft_printf("ft_ssl: Error: IV is required for CBC mode\n"), NULL);
+
     uint64_t *output = ft_calloc(block_count, sizeof(uint64_t));
     if (!output)
         return (NULL);
@@ -370,6 +373,9 @@ static uint64_t *des_cbc(uint64_t *blocks, int block_count, uint64_t *subkeys, b
 
 static uint64_t *des_pcbc(uint64_t *blocks, int block_count, uint64_t *subkeys, bool decrypt, char *iv)
 {
+    if (!iv)
+        return (ft_printf("ft_ssl: Error: IV is required for PCBC mode\n"), NULL);
+
     uint64_t *output = ft_calloc(block_count, sizeof(uint64_t));
     if (!output)
         return (NULL);
@@ -442,6 +448,9 @@ static uint64_t *des_pcbc(uint64_t *blocks, int block_count, uint64_t *subkeys, 
 
 static uint64_t *triple_des_cbc(uint64_t *blocks, int block_count, uint64_t *subkeys, bool decrypt, char *iv)
 {
+    if (!iv)
+        return (ft_printf("ft_ssl: Error: IV is required for CBC mode\n"), NULL);
+
     uint64_t *output = ft_calloc(block_count, sizeof(uint64_t));
     if (!output)
         return (NULL);
@@ -505,6 +514,9 @@ static uint64_t *triple_des_cbc(uint64_t *blocks, int block_count, uint64_t *sub
 
 static uint64_t *triple_des_pcbc(uint64_t *blocks, int block_count, uint64_t *subkeys, bool decrypt, char *iv)
 {
+    if (!iv)
+        return (ft_printf("ft_ssl: Error: IV is required for PCBC mode\n"), NULL);
+
     uint64_t *output = ft_calloc(block_count, sizeof(uint64_t));
     if (!output)
         return (NULL);
@@ -708,6 +720,9 @@ int des(t_ssl_command *command)
         cipher = des_pcbc(blocks, blocks_count, subkeys, params.decode, params.iv);
     else if (command->mode == 13) // des3-pcbc
         cipher = triple_des_pcbc(blocks, blocks_count, subkeys, params.decode, params.iv);
+    
+    if (!cipher)
+        return (free(blocks), free(subkeys), free_params_des(params), 0);
 
     uint8_t *final = final_value(cipher, blocks_count, params.decode);
     if (!final)
